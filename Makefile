@@ -29,6 +29,10 @@ setup-env: ## Create .env from sample.env (never overwrites an existing .env)
 run: ## Start the terminal chat (reads .env)
 	@uv run python -m app.cli
 
+.PHONY: smoke-test
+smoke-test: ## Run a real two-turn conversation (needs GEMINI_API_KEY) on a throwaway DB
+	@uv run python -m scripts.smoke_test
+
 .PHONY: reset-db
 reset-db: ## Recreate the local SQLite database from the schema and seed it
 	@uv run python -m scripts.reset_database
