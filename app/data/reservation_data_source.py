@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import date
 
 from app.data.models import ReservationDetails
 
@@ -32,3 +33,32 @@ class ReservationDataSource:
             (user_id,),
         ).fetchall()
         return [ReservationDetails.model_validate(dict(row)) for row in rows]
+
+    def create(
+        self,
+        user_id: int,
+        accommodation_id: int,
+        check_in: date,
+        check_out: date,
+        guests: int,
+        total_price: float,
+    ) -> ReservationDetails:
+        cursor = self.connection.execute(
+            "INSERT INTO reservations"
+            " (user_id, accommodation_id, check_in, check_out, guests, total_price, status)"
+            " VALUES (?, ?, ?, ?, ?, ?, 'confirmed')",
+            (
+                user_id,
+                accommodation_id,
+                check_in.isoformat(),
+                check_out.isoformat(),
+                guests,
+                total_price,
+            ),
+        )
+        self.connection.commit()
+        row = self.connection.execute(
+            _RESERVATION_DETAILS_QUERY + " WHERE reservations.id = ?",
+            (cursor.lastrowid,),
+        ).fetchone()
+        return ReservationDetails.model_validate(dict(row))

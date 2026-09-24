@@ -57,3 +57,11 @@ class ReservationDetails(BaseModel):
     total_price: float
     status: Literal["confirmed", "cancelled"]
     created_at: str
+
+
+class Decision(BaseModel):
+    id: int
+    user_id: int
+    reservation_id: int | None
+    summary: str
+    created_at: str
