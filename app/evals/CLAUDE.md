@@ -15,3 +15,13 @@ Keep the cases tied to the seed: user ids, budgets and catalog cities come from 
 `run_case` plays one case against the orchestrator on a **freshly seeded throwaway database** (runs never see each other's reservations) and returns a `RunRecord`: per turn, the response, each delegation to a specialist (`AgentCall`), reservations created, trace id, latency, and any Gemini API error (which ends that run instead of the whole dataset). Traces are tagged `dataset` + the case id in Langfuse.
 
 `make run-dataset RUNS=3 CASES=id1,id2` runs it against the real API and writes `evals/runs/<timestamp>/results.jsonl` (git-ignored). Each run makes a dozen or more model calls — narrow with `CASES` while iterating.
+
+## Evaluators (`evaluators/`) — the extension point
+
+An evaluator subclasses `Evaluator` (`evaluators/base.py`), sets a unique `name`, and implements `evaluate(record) -> EvaluationResult(passed, score 0-1, reason)`. One module per evaluator (`*_evaluator.py`), registered by appending an instance to `EVALUATORS` in `evaluators/__init__.py`. `CompletedWithoutErrorsEvaluator` is the reference example.
+
+- What an evaluator can read: `record.case` (the references), and per turn `response`, `agent_calls` (name, instructions, response — the interpreter's raw output is the `interpret_request` call's response), `reservations_created`, `latency_seconds` and `trace_id`.
+- Evaluators that need a model build a `GeminiClient` in their constructor: `generate(...)` for LLM-as-a-Judge, `embed(texts)` for cosine similarity. Those calls are traced like any other.
+- An evaluator that raises is reported as failed with the error in its reason — it never aborts the report.
+
+`make evaluate RESULTS=evals/runs/<timestamp>/results.jsonl` runs every registered evaluator, prints per case the passed runs, mean score, **pass@k** (at least one of the k runs passed) and **pass^k** (all k runs passed), and writes `evaluations.jsonl` next to the results. `LANGFUSE=1` also attaches each score to the run's Langfuse session.

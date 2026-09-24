@@ -41,6 +41,11 @@ CASES ?=
 run-dataset: ## Run the eval dataset against the real API (RUNS=3 CASES=id1,id2), saving to evals/runs/
 	@uv run python -m scripts.run_dataset --runs $(RUNS) $(if $(CASES),--cases $(CASES),)
 
+.PHONY: evaluate
+evaluate: ## Run the registered evaluators over a run-dataset result (RESULTS=evals/runs/<timestamp>/results.jsonl, LANGFUSE=1 to send scores)
+	@if [ -z "$(RESULTS)" ]; then echo "RESULTS is required, e.g. make evaluate RESULTS=evals/runs/<timestamp>/results.jsonl"; exit 1; fi
+	@uv run python -m scripts.evaluate_runs --results $(RESULTS) $(if $(LANGFUSE),--langfuse,)
+
 .PHONY: reset-db
 reset-db: ## Recreate the local SQLite database from the schema and seed it
 	@uv run python -m scripts.reset_database

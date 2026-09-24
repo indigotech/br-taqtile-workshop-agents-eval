@@ -90,6 +90,7 @@ class TestRunCase:
         )
 
         first_turn, second_turn = record.turns
+        assert record.session_id.startswith("eval-paraty-2-")
         assert (record.run_index, record.model, record.run_date) == (
             2,
             "scripted-model",
