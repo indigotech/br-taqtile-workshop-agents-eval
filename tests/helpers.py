@@ -101,3 +101,12 @@ def grounded_text_response(
         ],
     )
     return response
+
+
+def declared_function_names(config: types.GenerateContentConfig) -> list[str]:
+    return [
+        declaration.name or ""
+        for tool in config.tools or []
+        if isinstance(tool, types.Tool)
+        for declaration in tool.function_declarations or []
+    ]
