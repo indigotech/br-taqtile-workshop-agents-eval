@@ -1,5 +1,7 @@
+from collections.abc import Callable
 from typing import Any
 
+import httpx
 from google.genai import types
 from pydantic import BaseModel, ConfigDict
 
@@ -110,3 +112,9 @@ def declared_function_names(config: types.GenerateContentConfig) -> list[str]:
         if isinstance(tool, types.Tool)
         for declaration in tool.function_declarations or []
     ]
+
+
+def mock_http_client(
+    handler: Callable[[httpx.Request], httpx.Response],
+) -> httpx.Client:
+    return httpx.Client(transport=httpx.MockTransport(handler))

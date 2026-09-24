@@ -35,7 +35,7 @@ Set `LANGFUSE_TRACING_ENABLED=false` in `.env` to run without Langfuse.
 A lean, by-layer take on the Clean Architecture used in Taqtile's AI projects, under `app/`:
 
 - **`core/`** — innermost: config, logging, Langfuse observability, the Gemini client, the tool abstraction and registry, the tool-calling loop, and the `Agent` class every agent is built from.
-- **`data/`** — the SQLite schema and seed, the connection helpers, row models, and one datasource per aggregate. Later: clients for external APIs.
+- **`data/`** — the SQLite schema and seed, the connection helpers, row models, one datasource per aggregate, and the clients for external public APIs.
 - **`tools/`** — concrete tools the model can call, each with a Pydantic input and output model.
 - **`agents/`** — concrete agents: their prompts, the tools they get, and their model parameters.
 - **`cli.py`** — the terminal entrypoint.

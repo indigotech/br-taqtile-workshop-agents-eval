@@ -1,6 +1,6 @@
 # data/ — Data Layer
 
-All access to SQLite (and, later, to external APIs) lives here. No agent logic. Imports only from `core/`.
+All access to SQLite and to external APIs lives here. No agent logic. Imports only from `core/`.
 
 ## Schema and seed
 
@@ -23,4 +23,8 @@ One class per aggregate (`UserDataSource`), taking the connection in its constru
 
 ## External API clients
 
-Clients for keyless public APIs (Open-Meteo, Nominatim, Nager.Date) go under `data/` too, one module per API, using `httpx`. Validate each response into a model right here, at the boundary that receives it.
+Keyless public APIs, one client class per API (`*_client.py`): `OpenMeteoClient` (weather), `NominatimClient` (geocoding) and `NagerDateClient` (holidays).
+
+- Each client takes an `httpx.Client` in its constructor. Build it with `build_http_client()` (`http.py`), which sets the timeout and the identifying `User-Agent` Nominatim's usage policy requires; tests pass `mock_http_client(handler)` from `tests/helpers.py` instead, so no test touches the network.
+- Validate every response into a model **in the client** — private `_Response` models for the raw shape, public models for what the rest of the app sees. Use `validation_alias` to rename API fields (`lat` → `latitude`).
+- An expected refusal gets its own exception (`ForecastUnavailableError` when the date is beyond Open-Meteo's ~16-day window) so the tool can turn it into a normal output; anything else propagates and `ToolRegistry` reports it to the model.
