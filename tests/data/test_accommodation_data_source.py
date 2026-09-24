@@ -50,3 +50,12 @@ class TestGetAccommodation:
 
     def test_missing_accommodation(self, connection: sqlite3.Connection) -> None:
         assert AccommodationDataSource(connection).get_accommodation(999) is None
+
+
+class TestListAccommodations:
+    def test_whole_catalog_in_id_order(self, connection: sqlite3.Connection) -> None:
+        accommodations = AccommodationDataSource(connection).list_accommodations()
+
+        assert [accommodation.id for accommodation in accommodations] == list(
+            range(1, 16)
+        )

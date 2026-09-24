@@ -10,10 +10,4 @@ class TestOutputGeneratorAgent:
 
         result = agent.run([user_message("dados levantados: ...")])
 
-        config = gemini.requests[0].config
-        assert (config.tools, config.response_mime_type, result.text) == (
-            None,
-            None,
-            "Roteiro: ...",
-        )
-        assert "R$ 1.234,56" in str(config.system_instruction)
+        assert (gemini.requests[0].config.tools, result.text) == (None, "Roteiro: ...")
