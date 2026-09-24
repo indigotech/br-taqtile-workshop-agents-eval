@@ -1,8 +1,9 @@
 from typing import Any
 
 import pytest
+from pydantic import BaseModel
 
-from app.core.tools import ToolRegistry
+from app.core.tools import Tool, ToolRegistry
 from tests.helpers import EchoInput, EchoTool, ExplodingTool
 
 
@@ -64,3 +65,44 @@ class TestRegistry:
                 "parameters_json_schema": schema,
             }
         ]
+
+
+class Stop(BaseModel):
+    city: str
+
+
+class ItineraryInput(BaseModel):
+    stops: list[Stop]
+
+
+class ItineraryTool(Tool[ItineraryInput, Stop]):
+    name = "itinerary"
+    description = "Takes nested models"
+    input_model = ItineraryInput
+    output_model = Stop
+
+    def run(self, arguments: ItineraryInput) -> Stop:
+        return arguments.stops[0]
+
+
+class TestDeclaration:
+    def test_nested_models_are_inlined_instead_of_referenced(self) -> None:
+        declaration = ItineraryTool().declaration()
+
+        assert declaration.parameters_json_schema == {
+            "properties": {
+                "stops": {
+                    "items": {
+                        "properties": {"city": {"title": "City", "type": "string"}},
+                        "required": ["city"],
+                        "title": "Stop",
+                        "type": "object",
+                    },
+                    "title": "Stops",
+                    "type": "array",
+                }
+            },
+            "required": ["stops"],
+            "title": "ItineraryInput",
+            "type": "object",
+        }
