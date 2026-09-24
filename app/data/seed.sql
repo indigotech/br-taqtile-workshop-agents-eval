@@ -30,7 +30,7 @@ INSERT INTO preferences (user_id, category, value) VALUES
     (2, 'food', 'comida de boteco'),
     (2, 'activity', 'shows de música ao vivo'),
     (2, 'restriction', 'sem carro'),
-    (3, 'food', 'frutos do mar'),
+    (3, 'food', 'comida italiana'),
     (3, 'activity', 'museus'),
     (3, 'lodging', 'hotel'),
     (3, 'restriction', 'vegetariana'),

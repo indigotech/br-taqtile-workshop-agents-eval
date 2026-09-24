@@ -27,6 +27,7 @@ make run-langfuse                    # local Langfuse at http://localhost:3000 (
 make run                             # terminal chat; creates and seeds the DB on first run
 make reset-db                        # recreate data/planner.db from schema.sql + seed.sql
 make smoke-test                      # real two-turn conversation on a throwaway DB (needs GEMINI_API_KEY)
+make run-dataset RUNS=3              # play evals/dataset.jsonl N times, saving to evals/runs/ (needs GEMINI_API_KEY)
 ```
 
 Set `LANGFUSE_TRACING_ENABLED=false` in `.env` to run without Langfuse.
@@ -39,6 +40,7 @@ A lean, by-layer take on the Clean Architecture used in Taqtile's AI projects, u
 - **`data/`** — the SQLite schema and seed, the connection helpers, row models, one datasource per aggregate, and the clients for external public APIs.
 - **`tools/`** — concrete tools the model can call, each with a Pydantic input and output model.
 - **`agents/`** — concrete agents: their prompts, the tools they get, and their model parameters. An orchestrator agent talks to the user and delegates to the specialists through `AgentTool`.
+- **`evals/`** — the evaluation harness: dataset, runner and the extension points for the workshop's evaluators.
 - **`cli.py`** — the terminal entrypoint.
 
 Each layer has its own `CLAUDE.md` with detailed conventions — read it before working in that layer.
@@ -51,7 +53,7 @@ Each layer has its own `CLAUDE.md` with detailed conventions — read it before 
 - **`data/`** imports only from `core/`.
 - **`tools/`** imports from `data/` and `core/`.
 - **`agents/`** imports from `tools/`, `data/` and `core/`; never from another agent's module except through the orchestrator.
-- **`cli.py`** is the composition root and may import from anywhere.
+- **`cli.py`** and **`evals/`** are composition roots and may import from anywhere; nothing else imports from them.
 
 ## Code Conventions
 

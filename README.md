@@ -46,6 +46,7 @@ Sem Docker, dá pra rodar sem observabilidade: coloque `LANGFUSE_TRACING_ENABLED
 | --- | --- |
 | `make run` | Chat no terminal |
 | `make smoke-test` | Roda uma conversa real de ponta a ponta num banco descartável |
+| `make run-dataset RUNS=3 CASES=id1,id2` | Roda os casos de `evals/dataset.jsonl` N vezes e salva as saídas em `evals/runs/` |
 | `make reset-db` | Recria o banco `data/planner.db` com os dados de exemplo |
 | `make run-langfuse` / `make stop-langfuse` | Sobe / para o Langfuse local |
 | `make clean-langfuse` | Remove o Langfuse e todos os traces |
