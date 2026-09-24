@@ -1,0 +1,57 @@
+[project]
+name = "br-taqtile-workshop-agents-eval"
+version = "0.1.0"
+description = "Planejador de rolê multi-agente, ponto de partida do workshop de avaliação de agentes"
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "google-genai==2.23.0",
+    "httpx==0.28.1",
+    "langfuse==4.15.3",
+    "pydantic==2.13.5",
+    "pydantic-settings==2.15.0",
+]
+
+[dependency-groups]
+dev = [
+    "mypy==2.3.1",
+    "pytest==9.1.1",
+    "python-dotenv==1.2.3",
+    "ruff==0.16.7",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.0,<0.13"]
+build-backend = "uv_build"
+
+[tool.uv]
+exclude-newer = "7 days"
+
+[tool.uv.build-backend]
+module-name = "app"
+module-root = ""
+
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+strict = true
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+
+[tool.ruff.lint]
+# Rule families: E/W pycodestyle, F Pyflakes (logic), I isort,
+# UP pyupgrade, B bugbear, SIM flake8-simplify, RUF Ruff-specific.
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+# E501 (line-too-long) is enforced by `ruff format`, not the linter.
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "scripts"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

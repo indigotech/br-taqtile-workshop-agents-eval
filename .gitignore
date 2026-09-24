@@ -1,0 +1,25 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+.venv/
+
+# Local development files
+.env
+data/*.db
+data/*.db-*
+
+# Tool caches
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Editors / OS
+.vscode
+.idea
+.DS_Store
+
+# Claude
+.claude/worktrees/
+CLAUDE.local.md
