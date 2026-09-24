@@ -26,6 +26,7 @@ make setup-env                       # creates .env from sample.env; then fill i
 make run-langfuse                    # local Langfuse at http://localhost:3000 (keys are pre-provisioned)
 make run                             # terminal chat; creates and seeds the DB on first run
 make reset-db                        # recreate data/planner.db from schema.sql + seed.sql
+make smoke-test                      # real two-turn conversation on a throwaway DB (needs GEMINI_API_KEY)
 ```
 
 Set `LANGFUSE_TRACING_ENABLED=false` in `.env` to run without Langfuse.
@@ -37,7 +38,7 @@ A lean, by-layer take on the Clean Architecture used in Taqtile's AI projects, u
 - **`core/`** — innermost: config, logging, Langfuse observability, the Gemini client, the tool abstraction and registry, the tool-calling loop, and the `Agent` class every agent is built from.
 - **`data/`** — the SQLite schema and seed, the connection helpers, row models, one datasource per aggregate, and the clients for external public APIs.
 - **`tools/`** — concrete tools the model can call, each with a Pydantic input and output model.
-- **`agents/`** — concrete agents: their prompts, the tools they get, and their model parameters.
+- **`agents/`** — concrete agents: their prompts, the tools they get, and their model parameters. An orchestrator agent talks to the user and delegates to the specialists through `AgentTool`.
 - **`cli.py`** — the terminal entrypoint.
 
 Each layer has its own `CLAUDE.md` with detailed conventions — read it before working in that layer.

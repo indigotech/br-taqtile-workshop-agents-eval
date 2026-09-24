@@ -4,6 +4,22 @@ Sistema multi-agente que planeja um fim de semana: consulta orçamento e prefer�
 
 > Esse sistema **não é bom de propósito**. O workshop é sobre encontrar onde ele erra, com evals, e corrigir.
 
+## Como funciona
+
+Você conversa com um **orquestrador**, que delega cada parte do trabalho a um agente especialista. Cada especialista é exposto ao orquestrador como uma tool:
+
+| Agente | O que faz |
+| --- | --- |
+| Interpretador de input | Extrai destino, datas, nº de pessoas e preferências em JSON |
+| Banco | Consulta orçamento, preferências, histórico e hospedagens no SQLite |
+| Dados públicos | Clima (Open-Meteo), coordenadas (OpenStreetMap) e feriados (Nager.Date) |
+| Pesquisa | Busca eventos e restaurantes com o Google Search do Gemini |
+| Analista de orçamento | Estima os custos e verifica se cabe no orçamento |
+| Ação | Reserva a hospedagem (mock) e registra a decisão no banco |
+| Gerador de output | Escreve o roteiro final |
+
+No Langfuse, cada mensagem vira um trace com os agentes, as chamadas ao Gemini e as tools aninhados.
+
 ## Requisitos
 
 - [uv](https://docs.astral.sh/uv/getting-started/installation/). Ele baixa o Python 3.13 sozinho, então não é preciso instalar Python.
@@ -29,6 +45,7 @@ Sem Docker, dá pra rodar sem observabilidade: coloque `LANGFUSE_TRACING_ENABLED
 | Comando | O que faz |
 | --- | --- |
 | `make run` | Chat no terminal |
+| `make smoke-test` | Roda uma conversa real de ponta a ponta num banco descartável |
 | `make reset-db` | Recria o banco `data/planner.db` com os dados de exemplo |
 | `make run-langfuse` / `make stop-langfuse` | Sobe / para o Langfuse local |
 | `make clean-langfuse` | Remove o Langfuse e todos os traces |

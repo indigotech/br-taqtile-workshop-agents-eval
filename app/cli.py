@@ -1,16 +1,19 @@
 import logging
 import sqlite3
 import uuid
+from datetime import date
 
+import httpx
 from google.genai import errors, types
 
-from app.agents.assistant_agent import build_assistant_agent
+from app.agents.orchestrator_agent import build_orchestrator_agent
 from app.core.agent import user_message
 from app.core.config import settings
 from app.core.gemini import GeminiClient
 from app.core.logging import setup_logging
 from app.core.observability import current_trace_id, flush, get_langfuse, observe_turn
 from app.data.database import connect, reset_database
+from app.data.http import build_http_client
 from app.data.models import User
 from app.data.user_data_source import UserDataSource
 
@@ -26,17 +29,20 @@ def main() -> None:
         reset_database(settings.DATABASE_PATH)
 
     connection = connect(settings.DATABASE_PATH)
+    http_client = build_http_client()
     try:
-        _chat(connection)
+        _chat(connection, http_client)
     finally:
+        http_client.close()
         connection.close()
         flush()
 
 
-def _chat(connection: sqlite3.Connection) -> None:
-    user_data_source = UserDataSource(connection)
-    user = _choose_user(user_data_source)
-    agent = build_assistant_agent(GeminiClient(), user_data_source, user.id)
+def _chat(connection: sqlite3.Connection, http_client: httpx.Client) -> None:
+    user = _choose_user(UserDataSource(connection))
+    agent = build_orchestrator_agent(
+        GeminiClient(), connection, http_client, user.id, date.today()
+    )
     session_id = str(uuid.uuid4())
     history: list[types.Content] = []
 
