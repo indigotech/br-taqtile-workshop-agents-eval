@@ -1,9 +1,8 @@
 name: Lint and Test
 
 on:
+  # Every PR, not just those into main: stacked PRs target each other's branches.
   pull_request:
-    branches:
-      - main
 
   workflow_dispatch:
 
