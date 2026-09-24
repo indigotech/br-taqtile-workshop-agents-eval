@@ -29,7 +29,9 @@ class Tool[InputT: BaseModel, OutputT: BaseModel](ABC):
         return types.FunctionDeclaration(
             name=self.name,
             description=self.description,
-            parameters_json_schema=self.input_model.model_json_schema(),
+            parameters_json_schema=_inline_references(
+                self.input_model.model_json_schema()
+            ),
         )
 
 
@@ -100,3 +102,26 @@ class ToolRegistry:
             return None, f"Tool failed: {error}"
         logger.info("Tool %s succeeded", name)
         return result.model_dump(mode="json"), None
+
+
+def _inline_references(schema: dict[str, Any]) -> dict[str, Any]:
+    """Replace Pydantic's `$defs`/`$ref` with the definitions themselves.
+
+    Function declarations get the plainest schema possible: nested models
+    otherwise arrive as references, one more JSON Schema feature the model
+    provider has to support for the tool to work."""
+    definitions: dict[str, Any] = schema.get("$defs", {})
+
+    def resolve(node: Any) -> Any:
+        if isinstance(node, dict):
+            if "$ref" in node:
+                return resolve(definitions[node["$ref"].split("/")[-1]])
+            return {
+                key: resolve(value) for key, value in node.items() if key != "$defs"
+            }
+        if isinstance(node, list):
+            return [resolve(item) for item in node]
+        return node
+
+    resolved: dict[str, Any] = resolve(schema)
+    return resolved
