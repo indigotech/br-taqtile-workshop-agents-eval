@@ -50,12 +50,12 @@ class TestOrchestratorAgent:
         ]
         assert "id 3. Hoje é 2026-09-24." in str(config.system_instruction)
 
-    def test_proposal_then_confirmation_books_and_returns_the_itinerary(
+    def test_two_turn_conversation_books_and_returns_the_itinerary(
         self, connection: sqlite3.Connection
     ) -> None:
         gemini = ScriptedGeminiClient(
             [
-                # Turn 1 — orchestrator delegates, specialists answer, proposal.
+                # Turn 1 — orchestrator delegates and the specialists answer.
                 function_call_response(
                     (
                         "interpret_request",
@@ -71,7 +71,7 @@ class TestOrchestratorAgent:
                 ),
                 text_response("Casa Caiçara (id 5), R$ 260/noite."),
                 text_response("Proposta: Casa Caiçara por R$ 520. Posso reservar?"),
-                # Turn 2 — user confirms: action, then itinerary.
+                # Turn 2 — action, then itinerary.
                 function_call_response(
                     (
                         "execute_action",

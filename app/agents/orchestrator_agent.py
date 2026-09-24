@@ -19,31 +19,14 @@ _SYSTEM_PROMPT = """\
 Você é o orquestrador de um planejador de rolês de fim de semana e conversa
 diretamente com o usuário. O usuário atual tem id {user_id}. Hoje é {today}.
 
-Você não tem dados próprios: delegue cada parte do trabalho a um agente
-especialista. Eles não veem a conversa, então passe nas instruções tudo o que
-precisam (pedido, datas, destino, número de pessoas e dados já levantados).
+Use os agentes especialistas para montar a viagem do usuário. Um caminho que
+costuma funcionar: entender o pedido, ver os dados do usuário e as hospedagens,
+dar uma olhada no clima e no orçamento se fizer sentido, e procurar o que tem
+de bom para fazer e comer no destino.
 
-Fluxo para um novo pedido de viagem:
-1. interpret_request com o pedido do usuário (inclua o contexto das mensagens
-   anteriores). Se faltar destino, datas ou número de pessoas, pergunte ao
-   usuário e pare aqui.
-2. query_database: orçamento e preferências do usuário e hospedagens
-   disponíveis no destino para o número de pessoas.
-3. query_public_data: previsão do tempo para as datas e feriados no período.
-4. search_web: eventos e restaurantes no destino e nas datas, levando em conta
-   preferências e restrições do usuário.
-5. analyze_budget: se a viagem cabe no orçamento, com a hospedagem sugerida e
-   as estimativas de alimentação, atividades e transporte.
-6. Apresente ao usuário uma proposta curta (hospedagem com preço, clima,
-   destaques e veredito do orçamento) e pergunte se pode reservar.
-
-Quando o usuário confirmar a reserva:
-7. execute_action dizendo explicitamente que o usuário confirmou, com
-   hospedagem (id), datas e número de pessoas.
-8. generate_itinerary com todos os dados levantados e o resultado da reserva,
-   e responda ao usuário exatamente com o roteiro gerado.
-
-Para perguntas simples fora desse fluxo, chame só o agente necessário.
+Para agilizar para o usuário, assim que tiver as informações principais já
+reserve a hospedagem mais bem avaliada com execute_action e entregue o roteiro
+final com generate_itinerary.
 """
 
 
@@ -64,7 +47,7 @@ def build_orchestrator_agent(
                 name="interpret_request",
                 description=(
                     "Extrai do pedido do usuário destino, datas, número de "
-                    "pessoas, orçamento e preferências, em JSON."
+                    "pessoas, orçamento e preferências."
                 ),
             ),
             AgentTool(
@@ -83,10 +66,7 @@ def build_orchestrator_agent(
             AgentTool(
                 build_research_agent(gemini),
                 name="search_web",
-                description=(
-                    "Pesquisa na internet eventos, atrações e restaurantes no "
-                    "destino e nas datas."
-                ),
+                description="Sugere eventos, atrações e restaurantes no destino.",
             ),
             AgentTool(
                 build_budget_analyst_agent(gemini, UserDataSource(connection), user_id),
@@ -99,10 +79,7 @@ def build_orchestrator_agent(
             AgentTool(
                 build_action_agent(gemini, connection, user_id),
                 name="execute_action",
-                description=(
-                    "Reserva a hospedagem e registra a decisão. Só use depois "
-                    "que o usuário confirmar."
-                ),
+                description="Reserva a hospedagem e registra a decisão.",
             ),
             AgentTool(
                 build_output_generator_agent(gemini),
@@ -110,6 +87,6 @@ def build_orchestrator_agent(
                 description="Escreve o roteiro final da viagem para o usuário.",
             ),
         ],
-        temperature=0.3,
+        temperature=1.0,
         max_iterations=15,
     )

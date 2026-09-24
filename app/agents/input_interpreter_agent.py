@@ -28,38 +28,21 @@ class TripRequest(BaseModel):
     )
 
 
-_WEEKDAYS = (
-    "segunda-feira",
-    "terça-feira",
-    "quarta-feira",
-    "quinta-feira",
-    "sexta-feira",
-    "sábado",
-    "domingo",
-)
-
 _SYSTEM_PROMPT = """\
 Você é o interpretador de pedidos de um planejador de rolês de fim de semana.
-Hoje é {weekday}, {today}.
+Hoje é {today}.
 
-Extraia do pedido do usuário: destino, datas de ida e volta, número de pessoas,
-orçamento total (se ele citar um valor) e preferências. Converta datas relativas
-("próximo fim de semana", "sexta que vem") em datas absolutas a partir de hoje;
-"fim de semana" sem mais detalhes vai de sábado a domingo. Use null para o que
-não foi dito e liste em missing_information o que falta para planejar
-(destino, datas e número de pessoas são indispensáveis).
-
-Responda apenas com o JSON pedido.
+Leia o pedido do usuário e devolva um JSON com destination, start_date,
+end_date, guests, budget_amount, preferences e missing_information.
+As datas podem vir como o usuário falou (ex.: "03/10", "sábado que vem" ou
+2026-10-03). Se quiser, explique brevemente como interpretou o pedido.
 """
 
 
 def build_input_interpreter_agent(gemini: GeminiClient, today: date) -> Agent:
     return Agent(
         name="input_interpreter",
-        system_prompt=_SYSTEM_PROMPT.format(
-            weekday=_WEEKDAYS[today.weekday()], today=today.isoformat()
-        ),
+        system_prompt=_SYSTEM_PROMPT.format(today=today.isoformat()),
         gemini=gemini,
-        response_model=TripRequest,
-        temperature=0.1,
+        temperature=0.9,
     )

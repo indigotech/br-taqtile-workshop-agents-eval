@@ -22,6 +22,7 @@ class TestDatabaseAgent:
         config = gemini.requests[0].config
         assert "id 2" in str(config.system_instruction)
         assert declared_function_names(config) == [
+            "get_database_snapshot",
             "get_user_profile",
             "list_user_reservations",
             "search_accommodations",

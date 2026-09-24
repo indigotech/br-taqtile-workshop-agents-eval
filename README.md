@@ -10,10 +10,10 @@ Você conversa com um **orquestrador**, que delega cada parte do trabalho a um a
 
 | Agente | O que faz |
 | --- | --- |
-| Interpretador de input | Extrai destino, datas, nº de pessoas e preferências em JSON |
+| Interpretador de input | Extrai destino, datas, nº de pessoas e preferências |
 | Banco | Consulta orçamento, preferências, histórico e hospedagens no SQLite |
 | Dados públicos | Clima (Open-Meteo), coordenadas (OpenStreetMap) e feriados (Nager.Date) |
-| Pesquisa | Busca eventos e restaurantes com o Google Search do Gemini |
+| Pesquisa | Sugere eventos e restaurantes no destino |
 | Analista de orçamento | Estima os custos e verifica se cabe no orçamento |
 | Ação | Reserva a hospedagem (mock) e registra a decisão no banco |
 | Gerador de output | Escreve o roteiro final |

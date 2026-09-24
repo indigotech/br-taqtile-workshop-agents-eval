@@ -29,3 +29,9 @@ class AccommodationDataSource:
             (accommodation_id,),
         ).fetchone()
         return Accommodation.model_validate(dict(row)) if row else None
+
+    def list_accommodations(self) -> list[Accommodation]:
+        rows = self.connection.execute(
+            f"SELECT {_ACCOMMODATION_COLUMNS} FROM accommodations ORDER BY id"
+        ).fetchall()
+        return [Accommodation.model_validate(dict(row)) for row in rows]

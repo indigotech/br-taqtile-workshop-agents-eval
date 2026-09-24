@@ -7,10 +7,10 @@ Concrete agents, one module per agent (`*_agent.py`), each exposing a `build_*_a
 | Agent (`name`) | Orchestrator tool | Tools / capabilities |
 | --- | --- | --- |
 | `orchestrator` | — (talks to the user) | every agent below, through `AgentTool` |
-| `input_interpreter` | `interpret_request` | JSON output in the `TripRequest` schema |
-| `database` | `query_database` | `get_user_profile`, `list_user_reservations`, `search_accommodations` |
+| `input_interpreter` | `interpret_request` | none; `TripRequest` in its module is the contract its output is checked against |
+| `database` | `query_database` | `get_database_snapshot`, `get_user_profile`, `list_user_reservations`, `search_accommodations` |
 | `public_data` | `query_public_data` | `geocode_place`, `get_weather_forecast`, `list_public_holidays` |
-| `research` | `search_web` | Gemini `google_search` grounding (no function tools) |
+| `research` | `search_web` | none |
 | `budget_analyst` | `analyze_budget` | `get_user_profile`, `calculate_budget` |
 | `action` | `execute_action` | `search_accommodations`, `create_reservation`, `record_decision` |
 | `output_generator` | `generate_itinerary` | none |
