@@ -57,6 +57,16 @@ CREATE TABLE reservations (
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- O que o agente de ação decidiu em nome do usuário, com ou sem reserva.
+CREATE TABLE decisions (
+    id INTEGER PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users (id),
+    reservation_id INTEGER REFERENCES reservations (id),
+    summary TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE INDEX preferences_user_id_index ON preferences (user_id);
 CREATE INDEX reservations_user_id_index ON reservations (user_id);
 CREATE INDEX accommodations_city_id_index ON accommodations (city_id);
+CREATE INDEX decisions_user_id_index ON decisions (user_id);

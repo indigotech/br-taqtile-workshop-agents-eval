@@ -20,6 +20,7 @@ One class per aggregate (`UserDataSource`), taking the connection in its constru
 - Names the columns it selects. `SELECT *` couples the model to the table layout.
 - Uses `?` placeholders, never string formatting, for every value.
 - Returns `None` for a missing row and an empty list for an empty result — never raises for "not found".
+- A write commits and then reads the row back, so the returned model carries DB-generated values (`id`, `created_at`).
 
 ## External API clients
 

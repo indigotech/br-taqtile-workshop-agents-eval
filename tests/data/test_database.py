@@ -24,6 +24,7 @@ class TestResetDatabase:
                 "preferences",
                 "accommodations",
                 "reservations",
+                "decisions",
             )
         }
         connection.close()
@@ -34,6 +35,7 @@ class TestResetDatabase:
             "preferences": 14,
             "accommodations": 15,
             "reservations": 4,
+            "decisions": 0,
         }
 
     def test_foreign_keys_are_enforced(self, tmp_path: Path) -> None:
