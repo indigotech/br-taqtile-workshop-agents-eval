@@ -86,3 +86,18 @@ class ExplodingTool(Tool[EchoInput, EchoOutput]):
 
     def run(self, arguments: EchoInput) -> EchoOutput:
         raise RuntimeError("boom")
+
+
+def grounded_text_response(
+    text: str, queries: list[str], sources: list[tuple[str, str]]
+) -> types.GenerateContentResponse:
+    response = text_response(text)
+    assert response.candidates is not None
+    response.candidates[0].grounding_metadata = types.GroundingMetadata(
+        web_search_queries=queries,
+        grounding_chunks=[
+            types.GroundingChunk(web=types.GroundingChunkWeb(title=title, uri=uri))
+            for title, uri in sources
+        ],
+    )
+    return response

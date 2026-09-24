@@ -7,6 +7,7 @@ from tests.helpers import (
     EchoTool,
     ScriptedGeminiClient,
     function_call_response,
+    grounded_text_response,
     text_response,
 )
 
@@ -131,4 +132,60 @@ class TestRunToolLoop:
         )
         assert config.tools == [
             types.Tool(function_declarations=[EchoTool().declaration()])
+        ]
+
+
+class TestBuiltinTools:
+    def test_builtin_tools_are_kept_alongside_function_declarations(self) -> None:
+        gemini = ScriptedGeminiClient([text_response("ok")])
+        google_search = types.Tool(google_search=types.GoogleSearch())
+
+        run_tool_loop(
+            gemini=gemini,
+            contents=[user_message("oi")],
+            registry=ToolRegistry([EchoTool()]),
+            config=types.GenerateContentConfig(tools=[google_search]),
+            max_iterations=1,
+        )
+
+        assert gemini.requests[0].config.tools == [
+            google_search,
+            types.Tool(function_declarations=[EchoTool().declaration()]),
+        ]
+
+    def test_no_tools_at_all_sends_no_tools_field(self) -> None:
+        gemini = ScriptedGeminiClient([text_response("ok")])
+
+        run_tool_loop(
+            gemini=gemini,
+            contents=[user_message("oi")],
+            registry=ToolRegistry([]),
+            config=types.GenerateContentConfig(),
+            max_iterations=1,
+        )
+
+        assert gemini.requests[0].config.tools is None
+
+    def test_grounding_queries_and_sources_are_collected(self) -> None:
+        gemini = ScriptedGeminiClient(
+            [
+                grounded_text_response(
+                    "Tem show no sábado.",
+                    queries=["shows paraty setembro"],
+                    sources=[("Agenda Paraty", "https://example.com/agenda")],
+                )
+            ]
+        )
+
+        result = run_tool_loop(
+            gemini=gemini,
+            contents=[user_message("eventos em paraty")],
+            registry=ToolRegistry([]),
+            config=types.GenerateContentConfig(),
+            max_iterations=1,
+        )
+
+        assert result.web_search_queries == ["shows paraty setembro"]
+        assert [source.model_dump() for source in result.sources] == [
+            {"title": "Agenda Paraty", "uri": "https://example.com/agenda"}
         ]

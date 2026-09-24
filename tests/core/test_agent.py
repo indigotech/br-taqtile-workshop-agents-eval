@@ -1,3 +1,5 @@
+from pydantic import BaseModel
+
 from app.core.agent import Agent, user_message
 from tests.helpers import (
     EchoTool,
@@ -52,3 +54,24 @@ class TestAgentRun:
         agent.run([user_message("olá")])
 
         assert gemini.requests[0].model == "scripted-model"
+
+
+class Destination(BaseModel):
+    city: str
+
+
+class TestStructuredOutput:
+    def test_response_model_requests_json_with_its_schema(self) -> None:
+        gemini = ScriptedGeminiClient([text_response('{"city": "Paraty"}')])
+        agent = Agent(
+            name="tester", system_prompt="", gemini=gemini, response_model=Destination
+        )
+
+        result = agent.run([user_message("quero ir pra Paraty")])
+
+        config = gemini.requests[0].config
+        assert (config.response_mime_type, config.response_json_schema) == (
+            "application/json",
+            Destination.model_json_schema(),
+        )
+        assert result.text == '{"city": "Paraty"}'

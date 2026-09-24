@@ -38,6 +38,7 @@ class GeminiClient:
             generation.update(
                 output=_serialize_response(response),
                 usage_details=_usage_details(response),
+                metadata=_grounding_metadata(response),
             )
         return response
 
@@ -87,3 +88,19 @@ def _usage_details(response: types.GenerateContentResponse) -> dict[str, int]:
         "total": usage.total_token_count,
     }
     return {name: count for name, count in details.items() if count is not None}
+
+
+def _grounding_metadata(
+    response: types.GenerateContentResponse,
+) -> dict[str, Any] | None:
+    if not response.candidates or response.candidates[0].grounding_metadata is None:
+        return None
+    metadata = response.candidates[0].grounding_metadata
+    return {
+        "web_search_queries": metadata.web_search_queries or [],
+        "sources": [
+            chunk.web.uri
+            for chunk in metadata.grounding_chunks or []
+            if chunk.web is not None
+        ],
+    }
