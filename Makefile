@@ -33,6 +33,14 @@ run: ## Start the terminal chat (reads .env)
 smoke-test: ## Run a real two-turn conversation (needs GEMINI_API_KEY) on a throwaway DB
 	@uv run python -m scripts.smoke_test
 
+# Runs per dataset case and an optional comma-separated case filter for run-dataset
+RUNS ?= 1
+CASES ?=
+
+.PHONY: run-dataset
+run-dataset: ## Run the eval dataset against the real API (RUNS=3 CASES=id1,id2), saving to evals/runs/
+	@uv run python -m scripts.run_dataset --runs $(RUNS) $(if $(CASES),--cases $(CASES),)
+
 .PHONY: reset-db
 reset-db: ## Recreate the local SQLite database from the schema and seed it
 	@uv run python -m scripts.reset_database

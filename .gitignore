@@ -9,6 +9,7 @@ __pycache__/
 .env
 data/*.db
 data/*.db-*
+evals/runs/
 
 # Tool caches
 .mypy_cache/

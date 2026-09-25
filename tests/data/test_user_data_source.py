@@ -51,7 +51,7 @@ class TestListPreferences:
         preferences = UserDataSource(connection).list_preferences(3)
 
         assert [preference.model_dump() for preference in preferences] == [
-            {"category": "food", "value": "frutos do mar"},
+            {"category": "food", "value": "comida italiana"},
             {"category": "activity", "value": "museus"},
             {"category": "lodging", "value": "hotel"},
             {"category": "restriction", "value": "vegetariana"},
