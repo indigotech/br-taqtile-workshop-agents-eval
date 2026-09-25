@@ -29,6 +29,7 @@ class TurnRecord(BaseModel):
 class RunRecord(BaseModel):
     case: EvalCase
     run_index: int
+    session_id: str
     run_date: date
     started_at: datetime
     model: str

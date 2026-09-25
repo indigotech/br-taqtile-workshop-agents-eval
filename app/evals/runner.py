@@ -35,19 +35,21 @@ def run_case(
     A Gemini API error ends the run early and is recorded on its turn instead
     of aborting the whole dataset."""
     started_at = datetime.now(UTC)
+    session_id = f"eval-{case.id}-{run_index}-{uuid.uuid4().hex[:8]}"
     with tempfile.TemporaryDirectory() as directory:
         database_path = Path(directory) / "eval.db"
         reset_database(database_path)
         connection = connect(database_path)
         try:
             turns = _play_messages(
-                case, run_index, gemini, http_client, today, connection
+                case, session_id, gemini, http_client, today, connection
             )
         finally:
             connection.close()
     return RunRecord(
         case=case,
         run_index=run_index,
+        session_id=session_id,
         run_date=today,
         started_at=started_at,
         model=gemini.model,
@@ -57,7 +59,7 @@ def run_case(
 
 def _play_messages(
     case: EvalCase,
-    run_index: int,
+    session_id: str,
     gemini: GeminiClient,
     http_client: httpx.Client,
     today: date,
@@ -67,7 +69,6 @@ def _play_messages(
         gemini, connection, http_client, case.user_id, today
     )
     reservation_data_source = ReservationDataSource(connection)
-    session_id = f"eval-{case.id}-{run_index}-{uuid.uuid4().hex[:8]}"
     history: list[types.Content] = []
     turns: list[TurnRecord] = []
     for message in case.messages:

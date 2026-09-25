@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from datetime import UTC, date, datetime
 from typing import Any
 
 import httpx
@@ -7,6 +8,8 @@ from pydantic import BaseModel, ConfigDict
 
 from app.core.gemini import GeminiClient
 from app.core.tools import Tool
+from app.evals.dataset import EvalCase, ExpectedTrip
+from app.evals.records import RunRecord, TurnRecord
 
 
 class ScriptedGeminiClient(GeminiClient):
@@ -134,3 +137,45 @@ def mock_http_client(
     handler: Callable[[httpx.Request], httpx.Response],
 ) -> httpx.Client:
     return httpx.Client(transport=httpx.MockTransport(handler))
+
+
+def run_record(
+    case_id: str = "paraty",
+    run_index: int = 1,
+    responses: tuple[str, ...] = ("ok",),
+    error: str | None = None,
+) -> RunRecord:
+    return RunRecord(
+        case=EvalCase(
+            id=case_id,
+            description="d",
+            user_id=3,
+            messages=[f"mensagem {index}" for index in range(len(responses))],
+            expected_trip=ExpectedTrip(
+                destination=None, start_date=None, end_date=None, guests=None
+            ),
+            required_agents=[],
+            user_preferences=[],
+            confirmation_message_index=None,
+            max_lodging_total=None,
+            reference_answer=None,
+        ),
+        run_index=run_index,
+        session_id=f"eval-{case_id}-{run_index}",
+        run_date=date(2026, 9, 24),
+        started_at=datetime(2026, 9, 24, 12, 0, tzinfo=UTC),
+        model="scripted-model",
+        turns=[
+            TurnRecord(
+                user_message=f"mensagem {index}",
+                response=response,
+                agent_calls=[],
+                reservations_created=[],
+                trace_id=f"trace-{case_id}-{run_index}-{index}",
+                latency_seconds=1.0,
+                stopped_by_iteration_limit=False,
+                error=error if index == len(responses) - 1 else None,
+            )
+            for index, response in enumerate(responses)
+        ],
+    )
