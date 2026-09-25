@@ -10,16 +10,20 @@ The **innermost layer**: stable primitives every agent reuses. It must never imp
 
 Thin context managers over the Langfuse v4 SDK (OpenTelemetry based), nested by the call stack:
 
-- `observe_turn` — one **trace per user turn**, grouped by `session_id` into a Langfuse session per conversation (a whole-chat trace would only appear when the chat ends).
+- `observe_turn` — one **trace per user turn**, grouped by `session_id` into a Langfuse session per conversation (a whole-chat trace would only appear when the chat ends). Optional `tags` mark traces for filtering (the dataset runner tags its runs).
 - `observe_agent` — an `agent` observation per `Agent.run`.
 - `observe_generation` — a `generation` per Gemini call, with model, parameters and token usage. Opened only by `GeminiClient`.
 - `observe_tool` — a `tool` observation per tool execution, with input, output and error. Opened only by `ToolRegistry`.
+- `observe_embedding` — an `embedding` observation per `GeminiClient.embed` call.
 
 Latency comes from the observation timings for free. With `LANGFUSE_TRACING_ENABLED=false` every context manager still works and records nothing.
 
 ## Gemini (`gemini.py`)
 
-`GeminiClient.generate` is the single place the SDK is called. The model comes from `settings.GEMINI_MODEL` unless the client or the call overrides it. The raw SDK call sits in `_generate_content` so test doubles override only that and still exercise the tracing.
+`GeminiClient.generate` is the single place the SDK is called. The model comes from `settings.GEMINI_MODEL` unless the client or the call overrides it. The raw SDK calls sit in `_generate_content` and `_embed_content` so test doubles override only those and still exercise the tracing.
+
+- The SDK client retries rate limits (429) and transient 5xx with exponential backoff (`_RETRY_OPTIONS`): the free tier allows few requests per minute and one orchestrated turn makes a dozen or more calls.
+- `embed(texts)` returns one vector per text with `settings.GEMINI_EMBEDDING_MODEL` — the building block for cosine-similarity evals.
 
 ## Tools (`tools.py`) and the loop (`tool_loop.py`)
 

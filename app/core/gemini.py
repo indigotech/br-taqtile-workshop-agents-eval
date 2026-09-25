@@ -5,14 +5,24 @@ from google import genai
 from google.genai import types
 
 from app.core.config import settings
-from app.core.observability import observe_generation
+from app.core.observability import observe_embedding, observe_generation
 
 logger = logging.getLogger(__name__)
+
+# The free tier allows only a handful of requests per minute, and a single
+# orchestrated turn makes a dozen or more calls: rate-limit (429) and transient
+# server errors are retried with exponential backoff instead of failing the turn.
+_RETRY_OPTIONS = types.HttpRetryOptions(
+    attempts=6,
+    initial_delay=2.0,
+    max_delay=60.0,
+    http_status_codes=[429, 500, 502, 503, 504],
+)
 
 
 class GeminiClient:
     """Thin wrapper over the google-genai SDK: picks the model from config and
-    records every call as a Langfuse generation with its token usage."""
+    records every call as a Langfuse generation (or embedding) with its usage."""
 
     def __init__(self, model: str | None = None) -> None:
         self.model = model or settings.GEMINI_MODEL
@@ -42,19 +52,48 @@ class GeminiClient:
             )
         return response
 
+    def embed(self, texts: list[str], model: str | None = None) -> list[list[float]]:
+        """One embedding vector per text, in order."""
+        chosen_model = model or settings.GEMINI_EMBEDDING_MODEL
+        with observe_embedding(
+            name="gemini.embedding", model=chosen_model, input=texts
+        ) as embedding:
+            response = self._embed_content(chosen_model, texts)
+            vectors = [item.values or [] for item in response.embeddings or []]
+            embedding.update(
+                output={
+                    "vectors": len(vectors),
+                    "dimensions": len(vectors[0]) if vectors else 0,
+                }
+            )
+        return vectors
+
     def _generate_content(
         self,
         model: str,
         contents: list[types.Content],
         config: types.GenerateContentConfig,
     ) -> types.GenerateContentResponse:
+        return self._sdk_client().models.generate_content(
+            model=model, contents=contents, config=config
+        )
+
+    def _embed_content(
+        self, model: str, texts: list[str]
+    ) -> types.EmbedContentResponse:
+        return self._sdk_client().models.embed_content(
+            model=model, contents=list(texts)
+        )
+
+    def _sdk_client(self) -> genai.Client:
         # Created lazily so importing the app (and running tests with a fake
         # client) never needs a real API key.
         if self._client is None:
-            self._client = genai.Client(api_key=settings.GEMINI_API_KEY)
-        return self._client.models.generate_content(
-            model=model, contents=contents, config=config
-        )
+            self._client = genai.Client(
+                api_key=settings.GEMINI_API_KEY,
+                http_options=types.HttpOptions(retry_options=_RETRY_OPTIONS),
+            )
+        return self._client
 
 
 def _serialize_contents(contents: list[types.Content]) -> list[dict[str, Any]]:

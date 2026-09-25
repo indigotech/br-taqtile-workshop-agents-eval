@@ -6,6 +6,7 @@ from typing import Any
 from langfuse import (
     Langfuse,
     LangfuseAgent,
+    LangfuseEmbedding,
     LangfuseGeneration,
     LangfuseSpan,
     LangfuseTool,
@@ -17,7 +18,10 @@ from app.core.config import settings
 
 @contextmanager
 def observe_turn(
-    session_id: str, user_id: str | None, user_message: str
+    session_id: str,
+    user_id: str | None,
+    user_message: str,
+    tags: list[str] | None = None,
 ) -> Iterator[LangfuseSpan]:
     """One Langfuse trace per user turn, grouped into a Langfuse session per
     conversation.
@@ -29,7 +33,9 @@ def observe_turn(
         get_langfuse().start_as_current_observation(
             name="turn", as_type="span", input=user_message
         ) as span,
-        propagate_attributes(session_id=session_id, user_id=user_id, trace_name="turn"),
+        propagate_attributes(
+            session_id=session_id, user_id=user_id, trace_name="turn", tags=tags
+        ),
     ):
         yield span
 
@@ -62,6 +68,14 @@ def observe_generation(
         model_parameters=model_parameters,
     ) as generation:
         yield generation
+
+
+@contextmanager
+def observe_embedding(name: str, model: str, input: Any) -> Iterator[LangfuseEmbedding]:
+    with get_langfuse().start_as_current_observation(
+        name=name, as_type="embedding", model=model, input=input
+    ) as embedding:
+        yield embedding
 
 
 def current_trace_id() -> str | None:

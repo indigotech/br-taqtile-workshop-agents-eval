@@ -15,6 +15,7 @@ class Settings(BaseSettings):
 
     GEMINI_API_KEY: str
     GEMINI_MODEL: str = "gemini-2.5-flash"
+    GEMINI_EMBEDDING_MODEL: str = "gemini-embedding-001"
 
     DATABASE_PATH: Path = Path("data/planner.db")
 

@@ -13,10 +13,16 @@ class ScriptedGeminiClient(GeminiClient):
     """Replays canned responses in order instead of calling the API, and keeps
     every request so tests can assert on what the model was sent."""
 
-    def __init__(self, responses: list[types.GenerateContentResponse]) -> None:
+    def __init__(
+        self,
+        responses: list[types.GenerateContentResponse],
+        embeddings: dict[str, list[float]] | None = None,
+    ) -> None:
         super().__init__(model="scripted-model")
         self._responses = list(responses)
+        self._embeddings = embeddings or {}
         self.requests: list[ScriptedRequest] = []
+        self.embedded_texts: list[str] = []
 
     def _generate_content(
         self,
@@ -30,6 +36,16 @@ class ScriptedGeminiClient(GeminiClient):
         if not self._responses:
             raise AssertionError("ScriptedGeminiClient ran out of responses")
         return self._responses.pop(0)
+
+    def _embed_content(
+        self, model: str, texts: list[str]
+    ) -> types.EmbedContentResponse:
+        self.embedded_texts.extend(texts)
+        return types.EmbedContentResponse(
+            embeddings=[
+                types.ContentEmbedding(values=self._embeddings[text]) for text in texts
+            ]
+        )
 
 
 class ScriptedRequest(BaseModel):
