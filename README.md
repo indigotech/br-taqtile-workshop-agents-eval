@@ -1,8 +1,6 @@
 # Planejador de rolê — workshop de avaliação de agentes
 
-Sistema multi-agente que planeja um fim de semana: consulta orçamento e preferências do usuário num SQLite local, clima, eventos e restaurantes, verifica se cabe no orçamento e reserva a hospedagem. Ele chama o Gemini direto pelo SDK `google-genai`, sem framework de agentes, e manda os traces pra um Langfuse local.
-
-> Esse sistema **não é bom de propósito**. O workshop é sobre encontrar onde ele erra, com evals, e corrigir.
+Sistema multi-agente que planeja um fim de semana: consulta orçamento e preferências do usuário num SQLite local, clima, eventos e restaurantes, verifica se cabe no orçamento e reserva a hospedagem. Ele chama o Modelo direto pelo SDK e manda os traces pra um Langfuse local.
 
 ## Como funciona
 
@@ -18,13 +16,13 @@ Você conversa com um **orquestrador**, que delega cada parte do trabalho a um a
 | Ação | Reserva a hospedagem (mock) e registra a decisão no banco |
 | Gerador de output | Escreve o roteiro final |
 
-No Langfuse, cada mensagem vira um trace com os agentes, as chamadas ao Gemini e as tools aninhados.
+No Langfuse, cada mensagem vira um trace com os agentes, as chamadas ao Modelo e as tools aninhados.
 
 ## Requisitos
 
 - [uv](https://docs.astral.sh/uv/getting-started/installation/). Ele baixa o Python 3.13 sozinho, então não é preciso instalar Python.
 - [Docker](https://docs.docker.com/get-docker/) com Compose, só pro Langfuse. A primeira execução baixa cerca de 1,5 GB de imagens.
-- Uma chave da API do Gemini: <https://aistudio.google.com/apikey>.
+- Uma chave da API do modelo (buscar no provider)
 
 ## Setup
 
@@ -51,7 +49,7 @@ Sem Docker, dá pra rodar sem observabilidade: coloque `LANGFUSE_TRACING_ENABLED
 | `make reset-db` | Recria o banco `data/planner.db` com os dados de exemplo |
 | `make run-langfuse` / `make stop-langfuse` | Sobe / para o Langfuse local |
 | `make clean-langfuse` | Remove o Langfuse e todos os traces |
-| `make test` | Roda os testes (sem chamar a API do Gemini) |
+| `make test` | Roda os testes (sem chamar a API do Modelo) |
 | `make lint-check` / `make lint-fix` | Lint e checagem de tipos / correção automática |
 | `make help` | Lista todos os comandos |
 
@@ -61,11 +59,11 @@ Sem Docker, dá pra rodar sem observabilidade: coloque `LANGFUSE_TRACING_ENABLED
 2. Escreva seus evaluators em `app/evals/evaluators/`, seguindo o exemplo `completed_without_errors_evaluator.py`, e registre-os na lista `EVALUATORS` de `app/evals/evaluators/__init__.py`.
 3. `make evaluate RESULTS=evals/runs/<data-hora>/results.jsonl` mostra, por caso, quantas execuções passaram, o pass@k e o pass^k. Com `LANGFUSE=1`, os scores também aparecem nas sessões do Langfuse.
 
-Cada execução faz uma dúzia ou mais de chamadas ao Gemini. Enquanto estiver ajustando, use `CASES=id1,id2` pra rodar só alguns casos e não gastar a cota gratuita.
+Cada execução faz uma dúzia ou mais de chamadas ao Modelo. Enquanto estiver ajustando, use `CASES=id1,id2` pra rodar só alguns casos e não gastar a cota gratuita.
 
 ## Problemas comuns
 
 - **Porta 3000 ocupada:** troque `LANGFUSE_PORT` e a porta de `LANGFUSE_BASE_URL` no `.env` (por exemplo, pra 3300) e rode `make run-langfuse` de novo.
-- **`erro na API do Gemini: 400 INVALID_ARGUMENT`:** a `GEMINI_API_KEY` do `.env` está errada.
-- **`erro na API do Gemini: 429`:** a cota gratuita acabou. Espere um minuto ou use outro modelo em `GEMINI_MODEL`.
+- **`erro na API do Modelo: 400 INVALID_ARGUMENT`:** a `MODEL_API_KEY` do `.env` está errada.
+- **`erro na API do MODEL: 429`:** a cota gratuita acabou. Espere um minuto ou use outro modelo em `MODEL`.
 - **Langfuse não abre logo depois do `make run-langfuse`:** a primeira subida leva de 1 a 2 minutos enquanto os bancos inicializam.
