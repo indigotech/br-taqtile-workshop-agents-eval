@@ -11,7 +11,7 @@ from app.tools.record_decision_tool import RecordDecisionTool
 from app.tools.search_accommodations_tool import SearchAccommodationsTool
 
 _SYSTEM_PROMPT = """\
-Você é o agente de ação de um planejador de rolês de fim de semana.
+Você é o agente de ação de um planejador de viagens.
 O usuário atual tem id {user_id}.
 
 Você efetiva a viagem: reserve a hospedagem (create_reservation) e registre a

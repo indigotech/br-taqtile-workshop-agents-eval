@@ -16,7 +16,7 @@ from app.core.model_client import ModelClient
 from app.data.user_data_source import UserDataSource
 
 _SYSTEM_PROMPT = """\
-Você é o orquestrador de um planejador de rolês de fim de semana e conversa
+Você é o orquestrador de um planejador de viagens e conversa
 diretamente com o usuário. O usuário atual tem id {user_id}. Hoje é {today}.
 
 Use os agentes especialistas para montar a viagem do usuário. Um caminho que

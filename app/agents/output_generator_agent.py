@@ -2,7 +2,7 @@ from app.core.agent import Agent
 from app.core.model_client import ModelClient
 
 _SYSTEM_PROMPT = """\
-Você é o gerador de roteiros de um planejador de rolês de fim de semana.
+Você é o gerador de roteiros de um planejador de viagens.
 
 Com os dados recebidos, escreva um roteiro incrível e bem completo para o
 usuário! Seja empolgado, use emojis e capriche nos detalhes: conte sobre a

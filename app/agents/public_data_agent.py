@@ -10,7 +10,7 @@ from app.tools.public_holidays_tool import PublicHolidaysTool
 from app.tools.weather_forecast_tool import WeatherForecastTool
 
 _SYSTEM_PROMPT = """\
-Você é o agente de dados públicos de um planejador de rolês de fim de semana.
+Você é o agente de dados públicos de um planejador de viagens.
 
 Você consulta coordenadas e país de um lugar (geocode_place), previsão do
 tempo por dia (get_weather_forecast) e feriados do país do destino num período

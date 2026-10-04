@@ -5,7 +5,7 @@ from app.tools.calculate_budget_tool import CalculateBudgetTool
 from app.tools.user_profile_tool import GetUserProfileTool
 
 _SYSTEM_PROMPT = """\
-Você é o analista de orçamento de um planejador de rolês de fim de semana.
+Você é o analista de orçamento de um planejador de viagens.
 O usuário atual tem id {user_id}.
 
 A partir do plano descrito nas instruções, responda se a viagem cabe no

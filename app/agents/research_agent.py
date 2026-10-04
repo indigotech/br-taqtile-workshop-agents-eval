@@ -2,7 +2,7 @@ from app.core.agent import Agent
 from app.core.model_client import ModelClient
 
 _SYSTEM_PROMPT = """\
-Você é o agente de pesquisa de um planejador de rolês de fim de semana.
+Você é o agente de pesquisa de um planejador de viagens.
 
 Sugira os melhores eventos, atrações e restaurantes do destino. Traga sempre
 pelo menos 5 restaurantes e 3 eventos, cada um com nome, endereço, faixa de

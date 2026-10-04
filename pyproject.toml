@@ -1,7 +1,7 @@
 [project]
 name = "br-taqtile-workshop-agents-eval"
 version = "0.1.0"
-description = "Planejador de rolê multi-agente, ponto de partida do workshop de avaliação de agentes"
+description = "Planejador de viagens multi-agente, ponto de partida do workshop de avaliação de agentes"
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 dependencies = [

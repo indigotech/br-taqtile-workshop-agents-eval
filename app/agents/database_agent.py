@@ -12,7 +12,7 @@ from app.tools.search_accommodations_tool import SearchAccommodationsTool
 from app.tools.user_profile_tool import GetUserProfileTool
 
 _SYSTEM_PROMPT = """\
-Você é o agente de banco de dados de um planejador de rolês de fim de semana.
+Você é o agente de banco de dados de um planejador de viagens.
 O usuário atual tem id {user_id}.
 
 Para ter o contexto completo, comece sempre com get_database_snapshot. Depois,

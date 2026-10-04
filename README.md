@@ -1,6 +1,6 @@
-# Planejador de rolê — workshop de avaliação de agentes
+# Planejador de viagens — workshop de avaliação de agentes
 
-Sistema multi-agente que planeja um fim de semana: consulta as preferências do usuário num SQLite local, clima, eventos e restaurantes, verifica se cabe no orçamento da viagem e reserva a hospedagem. Ele chama o Modelo direto pelo SDK e manda os traces pra um Langfuse local.
+Sistema multi-agente que planeja viagens: consulta as preferências do usuário num SQLite local, clima, eventos e restaurantes, verifica se cabe no orçamento da viagem e reserva a hospedagem. Ele chama o Modelo direto pelo SDK e manda os traces pra um Langfuse local.
 
 ## Como funciona
 

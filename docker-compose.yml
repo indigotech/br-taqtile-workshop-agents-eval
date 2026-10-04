@@ -71,7 +71,7 @@ services:
       LANGFUSE_INIT_ORG_ID: workshop-org
       LANGFUSE_INIT_ORG_NAME: Workshop
       LANGFUSE_INIT_PROJECT_ID: workshop-project
-      LANGFUSE_INIT_PROJECT_NAME: Planejador de role
+      LANGFUSE_INIT_PROJECT_NAME: Planejador de viagens
       LANGFUSE_INIT_PROJECT_PUBLIC_KEY: pk-lf-workshop
       LANGFUSE_INIT_PROJECT_SECRET_KEY: sk-lf-workshop
       LANGFUSE_INIT_USER_EMAIL: workshop@example.com

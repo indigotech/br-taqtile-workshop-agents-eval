@@ -1,4 +1,4 @@
--- Valores monetários em reais (REAL). Pra um planejador de rolê a precisão de
+-- Valores monetários em reais (REAL). Pra um planejador de viagens a precisão de
 -- ponto flutuante basta, e deixa as tools e os prompts sem conversão de centavos.
 -- Hospedagens fora do Brasil também ficam em reais, já convertidas: assim o
 -- catálogo e o orçamento falam a mesma moeda e as contas não precisam de câmbio.

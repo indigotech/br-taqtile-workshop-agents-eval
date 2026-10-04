@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-A multi-agent weekend-trip planner ("planejador de rolê") that serves as the starting point of an agent-evaluation workshop. It is a terminal chat in Python that calls the model through the OpenAI SDK's Chat Completions API directly — **no agent framework** — with a hand-written tool-calling loop, a local SQLite database, and a local Langfuse for traces.
+A multi-agent travel planner ("planejador de viagens") that serves as the starting point of an agent-evaluation workshop. It is a terminal chat in Python that calls the model through the OpenAI SDK's Chat Completions API directly — **no agent framework** — with a hand-written tool-calling loop, a local SQLite database, and a local Langfuse for traces.
 
 **The agents are meant to be bad.** Later phases plant defects on purpose (prompts, orchestration, parameters) so the workshop's evaluation techniques have something to find. Those defects live in agent *behavior*; the *code* still follows every convention below. Never "fix" an agent's prompt or parameters unless the task asks for it.
 

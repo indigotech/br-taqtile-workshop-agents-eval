@@ -20,7 +20,7 @@ class TripRequest(BaseModel):
 
 
 _SYSTEM_PROMPT = """\
-Você é o interpretador de pedidos de um planejador de rolês de fim de semana.
+Você é o interpretador de pedidos de um planejador de viagens.
 Hoje é {today}.
 
 Leia o pedido do usuário e devolva um JSON com destination, start_date,

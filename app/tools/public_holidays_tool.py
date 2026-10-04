@@ -25,7 +25,7 @@ class PublicHolidaysTool(Tool[PublicHolidaysInput, PublicHolidaysOutput]):
     name = "list_public_holidays"
     description = (
         "Lista os feriados do país do destino (Nager.Date) dentro de um período, "
-        "útil pra saber se o fim de semana é prolongado."
+        "útil pra saber se a viagem pega feriado ou fim de semana prolongado."
     )
     input_model = PublicHolidaysInput
     output_model = PublicHolidaysOutput
