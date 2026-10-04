@@ -40,7 +40,7 @@ A lean, by-layer take on the Clean Architecture used in Taqtile's AI projects, u
 - **`data/`** — the SQLite schema and seed, the connection helpers, row models, one datasource per aggregate, and the clients for external public APIs.
 - **`tools/`** — concrete tools the model can call, each with a Pydantic input and output model.
 - **`agents/`** — concrete agents: their prompts, the tools they get, and their model parameters. An orchestrator agent talks to the user and delegates to the specialists through `AgentTool`.
-- **`evals/`** — the evaluation harness: dataset, runner and the extension points for the workshop's evaluators.
+- **`evals/`** — the evaluation harness: the dataset and the runner that produces the `RunRecord`s the workshop's evaluators are built on.
 - **`cli.py`** — the terminal entrypoint.
 
 Each layer has its own `CLAUDE.md` with detailed conventions — read it before working in that layer.

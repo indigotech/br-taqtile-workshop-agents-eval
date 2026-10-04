@@ -38,5 +38,5 @@ def build_action_agent(
             ),
             RecordDecisionTool(DecisionDataSource(connection)),
         ],
-        temperature=0.1,
+        temperature=0.0,
     )

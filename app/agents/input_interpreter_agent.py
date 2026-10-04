@@ -7,24 +7,15 @@ from app.core.model_client import ModelClient
 
 
 class TripRequest(BaseModel):
-    destination: str | None = Field(
-        description="Cidade de destino, ou null se o usuário não disse"
-    )
-    start_date: date | None = Field(
-        description="Data de ida no formato AAAA-MM-DD, ou null"
-    )
-    end_date: date | None = Field(
-        description="Data de volta no formato AAAA-MM-DD, ou null"
-    )
-    guests: int | None = Field(description="Número de pessoas na viagem, ou null")
+    destination: str | None = Field(description="Cidade de destino")
+    start_date: date | None = Field(description="Data de ida no formato AAAA-MM-DD")
+    end_date: date | None = Field(description="Data de volta no formato AAAA-MM-DD")
+    guests: int | None = Field(description="Número de pessoas na viagem")
     budget_amount: float | None = Field(
-        description="Valor total em reais que o usuário disse querer gastar, ou null"
+        description="Valor total em reais que o usuário quer gastar"
     )
     preferences: list[str] = Field(
         description="Preferências e restrições citadas nesta mensagem"
-    )
-    missing_information: list[str] = Field(
-        description="O que ainda falta perguntar ao usuário para planejar a viagem"
     )
 
 
@@ -33,9 +24,9 @@ Você é o interpretador de pedidos de um planejador de rolês de fim de semana.
 Hoje é {today}.
 
 Leia o pedido do usuário e devolva um JSON com destination, start_date,
-end_date, guests, budget_amount, preferences e missing_information.
-As datas podem vir como o usuário falou (ex.: "03/10", "sábado que vem" ou
-2026-10-03). Se quiser, explique brevemente como interpretou o pedido.
+end_date, guests, budget_amount e preferences.
+Quando faltar alguma informação, assuma um valor plausível em vez de deixar
+em branco ou perguntar ao usuário.
 """
 
 
@@ -44,5 +35,6 @@ def build_input_interpreter_agent(model_client: ModelClient, today: date) -> Age
         name="input_interpreter",
         system_prompt=_SYSTEM_PROMPT.format(today=today.isoformat()),
         model_client=model_client,
-        temperature=0.9,
+        response_model=TripRequest,
+        temperature=2.0,
     )

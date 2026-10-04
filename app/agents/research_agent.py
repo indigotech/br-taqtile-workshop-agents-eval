@@ -15,5 +15,5 @@ def build_research_agent(model_client: ModelClient) -> Agent:
         name="research",
         system_prompt=_SYSTEM_PROMPT,
         model_client=model_client,
-        temperature=0.9,
+        temperature=2.0,
     )

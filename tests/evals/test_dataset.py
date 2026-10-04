@@ -56,7 +56,7 @@ class TestLoadDataset:
     def test_committed_dataset_is_valid(self) -> None:
         cases = load_dataset(Path("evals/dataset.jsonl"), today=date(2026, 9, 24))
 
-        assert len({case.id for case in cases}) == len(cases) == 8
+        assert len({case.id for case in cases}) == len(cases) == 2
         for case in cases:
             assert case.confirmation_message_index is None or (
                 case.confirmation_message_index < len(case.messages)

@@ -33,5 +33,5 @@ def build_public_data_agent(
             WeatherForecastTool(OpenMeteoClient(http_client)),
             PublicHolidaysTool(NagerDateClient(http_client)),
         ],
-        temperature=0.2,
+        temperature=1.0,
     )

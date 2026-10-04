@@ -15,7 +15,7 @@ from tests.helpers import (
 
 _TRIP_JSON = (
     '{"destination": "Paraty", "start_date": "2026-10-03", "end_date": "2026-10-04",'
-    ' "guests": 2, "budget_amount": null, "preferences": [], "missing_information": []}'
+    ' "guests": 2, "budget_amount": null, "preferences": []}'
 )
 
 

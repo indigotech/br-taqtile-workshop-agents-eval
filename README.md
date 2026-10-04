@@ -47,7 +47,6 @@ Sem Docker, dá pra rodar sem observabilidade: coloque `LANGFUSE_TRACING_ENABLED
 | `make run-case-slow-tool` | Chat com uma tool demorando 5s a mais em toda chamada (`SLOW_TOOL=search_accommodations`), pra ela aparecer como a mais lenta na timeline |
 | `make smoke-test` | Roda uma conversa real de ponta a ponta num banco descartável |
 | `make run-dataset RUNS=3 CASES=id1,id2` | Roda os casos de `evals/dataset.jsonl` N vezes e salva as saídas em `evals/runs/` |
-| `make evaluate RESULTS=...` | Roda os evaluators registrados sobre um resultado do `run-dataset` |
 | `make reset-db` | Recria o banco `data/planner.db` com os dados de exemplo |
 | `make run-langfuse` / `make stop-langfuse` | Sobe / para o Langfuse local |
 | `make clean-langfuse` | Remove o Langfuse e todos os traces |
@@ -57,9 +56,7 @@ Sem Docker, dá pra rodar sem observabilidade: coloque `LANGFUSE_TRACING_ENABLED
 
 ## Avaliando o sistema
 
-1. `make run-dataset RUNS=3` roda cada caso de `evals/dataset.jsonl` 3 vezes e salva as saídas em `evals/runs/<data-hora>/results.jsonl`.
-2. Escreva seus evaluators em `app/evals/evaluators/`, seguindo o exemplo `completed_without_errors_evaluator.py`, e registre-os na lista `EVALUATORS` de `app/evals/evaluators/__init__.py`.
-3. `make evaluate RESULTS=evals/runs/<data-hora>/results.jsonl` mostra, por caso, quantas execuções passaram, o pass@k e o pass^k. Com `LANGFUSE=1`, os scores também aparecem nas sessões do Langfuse.
+`make run-dataset RUNS=3` roda cada caso de `evals/dataset.jsonl` 3 vezes e salva as saídas em `evals/runs/<data-hora>/results.jsonl`, um `RunRecord` por linha. Os evaluators são construídos durante o workshop em cima desses registros.
 
 Cada execução faz uma dúzia ou mais de chamadas ao Modelo. Enquanto estiver ajustando, use `CASES=id1,id2` pra rodar só alguns casos e não gastar a cota gratuita.
 

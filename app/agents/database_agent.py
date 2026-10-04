@@ -44,5 +44,5 @@ def build_database_agent(
             ListUserReservationsTool(reservation_data_source),
             SearchAccommodationsTool(city_data_source, accommodation_data_source),
         ],
-        temperature=0.2,
+        temperature=1.0,
     )

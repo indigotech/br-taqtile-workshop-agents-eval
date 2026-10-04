@@ -19,11 +19,21 @@ class TestInputInterpreterAgent:
             model_client.requests[0].config.system_prompt
         )
 
+    def test_answer_is_constrained_to_the_trip_request_schema(self) -> None:
+        model_client = ScriptedModelClient([text_response("{}")])
+        agent = build_input_interpreter_agent(model_client, today=date(2026, 9, 24))
+
+        agent.run([user_message("quero ir pra Paraty")])
+
+        assert model_client.requests[0].config.response_json_schema == (
+            TripRequest.model_json_schema()
+        )
+
     def test_well_formed_answer_validates_into_a_trip_request(self) -> None:
         answer = (
             '{"destination": "Paraty", "start_date": "2026-10-03",'
             ' "end_date": "2026-10-04", "guests": 2, "budget_amount": null,'
-            ' "preferences": ["frutos do mar"], "missing_information": []}'
+            ' "preferences": ["frutos do mar"]}'
         )
         model_client = ScriptedModelClient([text_response(answer)])
         agent = build_input_interpreter_agent(model_client, today=date(2026, 9, 24))
@@ -37,5 +47,4 @@ class TestInputInterpreterAgent:
             "guests": 2,
             "budget_amount": None,
             "preferences": ["frutos do mar"],
-            "missing_information": [],
         }

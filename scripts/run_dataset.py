@@ -1,7 +1,7 @@
 """Run every dataset case N times against the real model API and save one
-RunRecord per run to evals/runs/<timestamp>/results.jsonl — the input for
-`make evaluate`. Each run makes a dozen or more model calls, so mind the quota:
-narrow with --cases while iterating."""
+RunRecord per run to evals/runs/<timestamp>/results.jsonl. Each run makes a
+dozen or more model calls, so mind the quota: narrow with --cases while
+iterating."""
 
 import argparse
 import logging
@@ -53,7 +53,6 @@ def main() -> None:
     finally:
         flush()
     print(f"\n{paint(f'Resultados em {results_path}', Style.SYSTEM)}")
-    print(paint(f"Avalie com: make evaluate RESULTS={results_path}", Style.SYSTEM))
 
 
 def _parse_arguments() -> argparse.Namespace:

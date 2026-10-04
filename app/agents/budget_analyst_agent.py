@@ -32,5 +32,5 @@ def build_budget_analyst_agent(
             GetUserProfileTool(user_data_source),
             CalculateBudgetTool(user_data_source),
         ],
-        temperature=0.3,
+        temperature=1.0,
     )
