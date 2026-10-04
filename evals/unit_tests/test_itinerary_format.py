@@ -29,14 +29,13 @@ ISO_DATE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
 # RESERVATION_NUMBER = re.compile(r"reserva\D{0,20}\b5\b", re.IGNORECASE)
 
 
-def test_itinerary_has_no_iso_dates(itineraries: list[str], runs: int) -> None:
-    failing_runs = [
-        run for run, itinerary in enumerate(itineraries) if ISO_DATE.search(itinerary)
-    ]
+def test_itinerary_has_no_iso_dates(itineraries: list[str]) -> None:
+    failures = 0
+    for itinerary in itineraries:
+        if ISO_DATE.search(itinerary):
+            failures = failures + 1
 
-    assert not failing_runs, (
-        f"data ISO em {len(failing_runs)} de {runs} execuções: {failing_runs}"
-    )
+    assert failures == 0, f"data ISO em {failures} de {len(itineraries)} roteiros"
 
 
 # Atividade 1: o roteiro não tem nenhum emoji (a regex não pode casar).
