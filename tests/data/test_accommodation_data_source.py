@@ -57,5 +57,5 @@ class TestListAccommodations:
         accommodations = AccommodationDataSource(connection).list_accommodations()
 
         assert [accommodation.id for accommodation in accommodations] == list(
-            range(1, 16)
+            range(1, 22)
         )

@@ -17,7 +17,13 @@ class CostItem(BaseModel):
         )
     )
     description: str = Field(description="O que é o gasto, ex.: '2 noites no Chalé'")
-    amount: float = Field(ge=0, description="Valor total do item em reais")
+    amount: float = Field(
+        ge=0,
+        description=(
+            "Valor total do item em reais; gastos em moeda estrangeira vão "
+            "convertidos para reais"
+        ),
+    )
 
 
 class CalculateBudgetInput(BaseModel):

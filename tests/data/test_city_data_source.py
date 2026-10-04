@@ -19,6 +19,14 @@ class TestFindByName:
             "longitude": -45.5914,
         }
 
+    def test_city_abroad_carries_its_country(
+        self, connection: sqlite3.Connection
+    ) -> None:
+        city = CityDataSource(connection).find_by_name("lisboa")
+
+        assert city is not None
+        assert city.country == "Portugal"
+
     def test_city_outside_the_catalog(self, connection: sqlite3.Connection) -> None:
         assert CityDataSource(connection).find_by_name("Gramado") is None
 
@@ -28,4 +36,4 @@ class TestListCities:
         names = [city.name for city in CityDataSource(connection).list_cities()]
 
         assert names == sorted(names)
-        assert len(names) == 8
+        assert len(names) == 11

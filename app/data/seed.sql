@@ -1,12 +1,15 @@
-INSERT INTO cities (id, name, state, latitude, longitude) VALUES
-    (1, 'São Paulo', 'SP', -23.5505, -46.6333),
-    (2, 'Rio de Janeiro', 'RJ', -22.9068, -43.1729),
-    (3, 'Campos do Jordão', 'SP', -22.7394, -45.5914),
-    (4, 'Paraty', 'RJ', -23.2178, -44.7131),
-    (5, 'Ubatuba', 'SP', -23.4336, -45.0838),
-    (6, 'Belo Horizonte', 'MG', -19.9167, -43.9345),
-    (7, 'Ouro Preto', 'MG', -20.3856, -43.5035),
-    (8, 'Florianópolis', 'SC', -27.5954, -48.5480);
+INSERT INTO cities (id, name, state, country, latitude, longitude) VALUES
+    (1, 'São Paulo', 'SP', 'Brasil', -23.5505, -46.6333),
+    (2, 'Rio de Janeiro', 'RJ', 'Brasil', -22.9068, -43.1729),
+    (3, 'Campos do Jordão', 'SP', 'Brasil', -22.7394, -45.5914),
+    (4, 'Paraty', 'RJ', 'Brasil', -23.2178, -44.7131),
+    (5, 'Ubatuba', 'SP', 'Brasil', -23.4336, -45.0838),
+    (6, 'Belo Horizonte', 'MG', 'Brasil', -19.9167, -43.9345),
+    (7, 'Ouro Preto', 'MG', 'Brasil', -20.3856, -43.5035),
+    (8, 'Florianópolis', 'SC', 'Brasil', -27.5954, -48.5480),
+    (9, 'Buenos Aires', 'Buenos Aires', 'Argentina', -34.6037, -58.3816),
+    (10, 'Santiago', 'Región Metropolitana', 'Chile', -33.4489, -70.6693),
+    (11, 'Lisboa', 'Lisboa', 'Portugal', 38.7223, -9.1393);
 
 INSERT INTO users (id, name, email, home_city_id) VALUES
     (1, 'Ana Souza', 'ana@example.com', 1),
@@ -53,7 +56,13 @@ INSERT INTO accommodations (id, city_id, kind, name, neighborhood, nightly_price
     (12, 8, 'hotel', 'Hotel Lagoa', 'Lagoa da Conceição', 480.00, 2, 4.5),
     (13, 8, 'airbnb', 'Casa Campeche', 'Campeche', 310.00, 6, 4.7),
     (14, 1, 'hotel', 'Hotel Paulista', 'Bela Vista', 400.00, 2, 4.1),
-    (15, 6, 'airbnb', 'Apê Savassi', 'Savassi', 230.00, 3, 4.3);
+    (15, 6, 'airbnb', 'Apê Savassi', 'Savassi', 230.00, 3, 4.3),
+    (16, 9, 'hotel', 'Hotel Palermo Soho', 'Palermo', 480.00, 2, 4.6),
+    (17, 9, 'airbnb', 'Depto San Telmo', 'San Telmo', 260.00, 4, 4.4),
+    (18, 10, 'hotel', 'Hotel Lastarria', 'Lastarria', 520.00, 2, 4.5),
+    (19, 10, 'airbnb', 'Depto Providencia', 'Providencia', 300.00, 3, 4.3),
+    (20, 11, 'hotel', 'Hotel Alfama', 'Alfama', 850.00, 2, 4.7),
+    (21, 11, 'airbnb', 'Apartamento Bairro Alto', 'Bairro Alto', 620.00, 4, 4.5);
 
 INSERT INTO reservations (user_id, accommodation_id, check_in, check_out, guests, total_price, status, created_at) VALUES
     (1, 2, '2026-06-12', '2026-06-14', 2, 760.00, 'confirmed', '2026-05-20 10:15:00'),

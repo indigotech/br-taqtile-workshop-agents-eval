@@ -1,11 +1,13 @@
 -- Valores monetários em reais (REAL). Pra um planejador de rolê a precisão de
 -- ponto flutuante basta, e deixa as tools e os prompts sem conversão de centavos.
+-- Hospedagens fora do Brasil também ficam em reais, já convertidas: assim o
+-- catálogo e o orçamento falam a mesma moeda e as contas não precisam de câmbio.
 
 CREATE TABLE cities (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
     state TEXT NOT NULL,
-    country TEXT NOT NULL DEFAULT 'Brasil',
+    country TEXT NOT NULL,
     latitude REAL NOT NULL,
     longitude REAL NOT NULL
 );

@@ -46,7 +46,7 @@ class TestSearchAccommodationsTool:
             execution.output["city_found"],
             execution.output["accommodations"],
             len(execution.output["available_cities"]),
-        ) == (False, [], 8)
+        ) == (False, [], 11)
 
     def test_zero_guests_is_rejected_before_reaching_the_database(
         self, connection: sqlite3.Connection

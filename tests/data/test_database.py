@@ -29,11 +29,11 @@ class TestResetDatabase:
         }
         connection.close()
         assert counts == {
-            "cities": 8,
+            "cities": 11,
             "users": 4,
             "budgets": 4,
             "preferences": 14,
-            "accommodations": 15,
+            "accommodations": 21,
             "reservations": 4,
             "decisions": 0,
         }

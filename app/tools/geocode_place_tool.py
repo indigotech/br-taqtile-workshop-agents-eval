@@ -6,7 +6,10 @@ from app.data.nominatim_client import GeocodingResult, NominatimClient
 
 class GeocodePlaceInput(BaseModel):
     place: str = Field(
-        description="Nome do lugar, de preferência com estado, ex.: 'Paraty, RJ'"
+        description=(
+            "Nome do lugar, de preferência com estado ou país, ex.: 'Paraty, RJ' "
+            "ou 'Buenos Aires, Argentina'"
+        )
     )
 
 
@@ -17,7 +20,10 @@ class GeocodePlaceOutput(BaseModel):
 
 class GeocodePlaceTool(Tool[GeocodePlaceInput, GeocodePlaceOutput]):
     name = "geocode_place"
-    description = "Converte o nome de um lugar em latitude e longitude (OpenStreetMap)."
+    description = (
+        "Converte o nome de um lugar em latitude, longitude e código do país "
+        "(OpenStreetMap)."
+    )
     input_model = GeocodePlaceInput
     output_model = GeocodePlaceOutput
 

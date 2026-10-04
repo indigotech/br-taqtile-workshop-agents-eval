@@ -1,5 +1,5 @@
 import httpx
-from pydantic import BaseModel, Field
+from pydantic import AliasPath, BaseModel, Field
 
 _SEARCH_URL = "https://nominatim.openstreetmap.org/search"
 
@@ -9,6 +9,9 @@ class GeocodingResult(BaseModel):
     display_name: str
     latitude: float = Field(validation_alias="lat")
     longitude: float = Field(validation_alias="lon")
+    country_code: str | None = Field(
+        default=None, validation_alias=AliasPath("address", "country_code")
+    )
 
 
 class NominatimClient:
@@ -25,6 +28,7 @@ class NominatimClient:
                 "q": query,
                 "format": "jsonv2",
                 "limit": 1,
+                "addressdetails": 1,
                 "accept-language": "pt-BR",
             },
         )

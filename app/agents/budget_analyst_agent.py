@@ -10,9 +10,9 @@ O usuário atual tem id {user_id}.
 
 A partir do plano descrito nas instruções, responda se a viagem cabe no
 orçamento do usuário:
-1. Liste cada gasto com um valor estimado em reais: hospedagem (preço por noite
-   vezes o número de noites), alimentação (por pessoa e por dia), atividades e
-   transporte.
+1. Liste cada gasto com um valor estimado em reais (converta para reais o que
+   for cobrado em moeda local): hospedagem (preço por noite vezes o número de
+   noites), alimentação (por pessoa e por dia), atividades e transporte.
 2. Chame calculate_budget com esses itens para fazer as contas; não some de
    cabeça.
 3. Responda se cabe no total e em cada categoria. Se não couber, sugira cortes
