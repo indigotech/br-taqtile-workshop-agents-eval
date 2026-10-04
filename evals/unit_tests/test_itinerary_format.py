@@ -22,8 +22,7 @@ Orçamento informado pelo usuário: R$ 2.000,00. Gastos estimados: hospedagem
 R$ 450,00, alimentação R$ 600,00, atividades R$ 300,00; total R$ 1.350,00.
 """
 
-# O produto mostra datas como 10/10; o formato ISO (2026-10-10) não pode chegar
-# ao usuário.
+# O produto mostra datas como 10/10.
 ISO_DATE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
 # EMOJI = re.compile("[\U0001F300-\U0001FAFF\U00002600-\U000027BF]")
 # RESERVATION_NUMBER = re.compile(r"reserva\D{0,20}\b5\b", re.IGNORECASE)
