@@ -30,10 +30,10 @@ run: ## Start the terminal chat (reads .env)
 	@uv run python -m app.cli
 
 # Tool that run-case-tool-error makes fail on every call
-ERROR_TOOL ?= get_user_profile
+ERROR_TOOL ?= search_accommodations
 
 .PHONY: run-case-tool-error
-run-case-tool-error: ## Start the chat with one tool failing on every call (ERROR_TOOL=get_user_profile)
+run-case-tool-error: ## Start the chat with one tool failing on every call (ERROR_TOOL=search_accommodations)
 	@FORCE_TOOL_ERROR=$(ERROR_TOOL) uv run python -m app.cli
 
 # Tool that run-case-slow-tool makes take 5 extra seconds on every call
