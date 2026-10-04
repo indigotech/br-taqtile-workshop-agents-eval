@@ -5,7 +5,6 @@
 # and the fixtures import from app/ only inside their bodies.
 import os
 import sqlite3
-import uuid
 from collections.abc import Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -14,6 +13,7 @@ import pytest
 from dotenv import load_dotenv
 
 from evals.unit_tests.model_api_key import missing_model_api_key_reason
+from evals.unit_tests.tracing import unit_test_trace
 
 if TYPE_CHECKING:
     from app.core.model_client import ModelClient
@@ -57,21 +57,7 @@ def runs() -> int:
 
 @pytest.fixture(autouse=True)
 def trace_each_test(request: pytest.FixtureRequest) -> Iterator[None]:
-    """One Langfuse trace per test, tagged `unit-test`, with its own prompt
-    cache key like every other entry point."""
-    from app.core.model_client import prompt_cache_session
-    from app.core.observability import observe_turn
-
-    session_id = f"unit-test-{uuid.uuid4().hex[:8]}"
-    with (
-        prompt_cache_session(session_id),
-        observe_turn(
-            session_id=session_id,
-            user_id=None,
-            user_message=request.node.nodeid,
-            tags=["unit-test"],
-        ),
-    ):
+    with unit_test_trace(request.node.nodeid):
         yield
 
 

@@ -4,9 +4,12 @@ marcados abaixo do teste."""
 
 import re
 
+import pytest
+
 from app.agents.output_generator_agent import build_output_generator_agent
 from app.core.agent import user_message
 from app.core.model_client import ModelClient
+from evals.unit_tests.tracing import unit_test_trace
 
 INSTRUCTIONS = """\
 Escreva o roteiro final da viagem.
@@ -26,9 +29,7 @@ ISO_DATE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
 # RESERVATION_NUMBER = re.compile(r"reserva\D{0,20}\b5\b", re.IGNORECASE)
 
 
-def test_itinerary_has_no_iso_dates(model_client: ModelClient, runs: int) -> None:
-    itineraries = _write_itineraries(model_client, runs)
-
+def test_itinerary_has_no_iso_dates(itineraries: list[str], runs: int) -> None:
     failing_runs = [
         run for run, itinerary in enumerate(itineraries) if ISO_DATE.search(itinerary)
     ]
@@ -44,6 +45,10 @@ def test_itinerary_has_no_iso_dates(model_client: ModelClient, runs: int) -> Non
 # Atividade 2: o roteiro cita o número da reserva (a regex tem que casar).
 
 
-def _write_itineraries(model_client: ModelClient, runs: int) -> list[str]:
-    agent = build_output_generator_agent(model_client)
-    return [agent.run([user_message(INSTRUCTIONS)]).text for _ in range(runs)]
+# Module scope: every test in this file checks the same itineraries, so the
+# model is called `runs` times per file instead of per test.
+@pytest.fixture(scope="module")
+def itineraries(runs: int) -> list[str]:
+    with unit_test_trace(__name__):
+        agent = build_output_generator_agent(ModelClient())
+        return [agent.run([user_message(INSTRUCTIONS)]).text for _ in range(runs)]
