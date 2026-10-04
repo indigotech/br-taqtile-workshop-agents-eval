@@ -26,7 +26,7 @@ def build_action_agent(
 ) -> Agent:
     accommodation_data_source = AccommodationDataSource(connection)
     return Agent(
-        name="action",
+        name="action_agent",
         system_prompt=_SYSTEM_PROMPT.format(user_id=user_id),
         model_client=model_client,
         tools=[

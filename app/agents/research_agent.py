@@ -12,7 +12,7 @@ preço e horário, para o usuário ter bastante opção.
 
 def build_research_agent(model_client: ModelClient) -> Agent:
     return Agent(
-        name="research",
+        name="research_agent",
         system_prompt=_SYSTEM_PROMPT,
         model_client=model_client,
         temperature=2.0,

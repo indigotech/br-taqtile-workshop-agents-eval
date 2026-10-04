@@ -30,7 +30,7 @@ def build_database_agent(
     city_data_source = CityDataSource(connection)
     accommodation_data_source = AccommodationDataSource(connection)
     return Agent(
-        name="database",
+        name="database_agent",
         system_prompt=_SYSTEM_PROMPT.format(user_id=user_id),
         model_client=model_client,
         tools=[

@@ -26,7 +26,7 @@ def build_budget_analyst_agent(
     model_client: ModelClient, user_data_source: UserDataSource, user_id: int
 ) -> Agent:
     return Agent(
-        name="budget_analyst",
+        name="budget_analyst_agent",
         system_prompt=_SYSTEM_PROMPT.format(user_id=user_id),
         model_client=model_client,
         tools=[

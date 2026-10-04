@@ -42,7 +42,7 @@ def build_orchestrator_agent(
     today: date,
 ) -> Agent:
     return Agent(
-        name="orchestrator",
+        name="orchestrator_agent",
         system_prompt=_SYSTEM_PROMPT.format(user_id=user_id, today=today.isoformat()),
         model_client=model_client,
         tools=[

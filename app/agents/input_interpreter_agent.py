@@ -32,7 +32,7 @@ em branco ou perguntar ao usuário.
 
 def build_input_interpreter_agent(model_client: ModelClient, today: date) -> Agent:
     return Agent(
-        name="input_interpreter",
+        name="input_interpreter_agent",
         system_prompt=_SYSTEM_PROMPT.format(today=today.isoformat()),
         model_client=model_client,
         response_model=TripRequest,

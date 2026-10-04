@@ -26,7 +26,7 @@ def build_public_data_agent(
     model_client: ModelClient, http_client: httpx.Client
 ) -> Agent:
     return Agent(
-        name="public_data",
+        name="public_data_agent",
         system_prompt=_SYSTEM_PROMPT,
         model_client=model_client,
         tools=[
