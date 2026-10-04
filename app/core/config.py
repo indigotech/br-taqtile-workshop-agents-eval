@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     # Name of a tool that fails on every call, for demonstrating an ERROR span
     # live. Only `make run-case-tool-error` sets it, from the shell environment.
     FORCE_TOOL_ERROR: str | None = None
+    # Name of a tool that takes a few extra seconds on every call, so the
+    # slowest span in the timeline is the same on every run. Only
+    # `make run-case-slow-tool` sets it.
+    FORCE_SLOW_TOOL: str | None = None
 
     LANGFUSE_TRACING_ENABLED: bool = True
     LANGFUSE_BASE_URL: str = "http://localhost:3000"

@@ -36,6 +36,13 @@ ERROR_TOOL ?= get_user_profile
 run-case-tool-error: ## Start the chat with one tool failing on every call (ERROR_TOOL=get_user_profile)
 	@FORCE_TOOL_ERROR=$(ERROR_TOOL) uv run python -m app.cli
 
+# Tool that run-case-slow-tool makes take 5 extra seconds on every call
+SLOW_TOOL ?= search_accommodations
+
+.PHONY: run-case-slow-tool
+run-case-slow-tool: ## Start the chat with one tool taking 5 extra seconds per call (SLOW_TOOL=search_accommodations)
+	@FORCE_SLOW_TOOL=$(SLOW_TOOL) uv run python -m app.cli
+
 .PHONY: smoke-test
 smoke-test: ## Run a real two-turn conversation (needs MODEL_API_KEY) on a throwaway DB
 	@uv run python -m scripts.smoke_test

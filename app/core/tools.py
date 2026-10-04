@@ -13,6 +13,8 @@ from app.core.observability import observe_tool
 
 logger = logging.getLogger(__name__)
 
+FORCED_DELAY_SECONDS = 5.0
+
 
 class Tool[InputT: BaseModel, OutputT: BaseModel](ABC):
     """A function the model can call. The input model is the contract shown to
@@ -104,6 +106,7 @@ class ToolRegistry:
             logger.warning("Invalid arguments for tool %s: %s", name, error)
             return None, f"Invalid arguments: {error}"
         try:
+            _delay_if_forced(name)
             _fail_if_forced(name)
             result = tool.run(validated_arguments)
         except Exception as error:
@@ -118,6 +121,11 @@ def _fail_if_forced(name: str) -> None:
     # path of a real one: same log, same error text shape, same ERROR span.
     if name == settings.FORCE_TOOL_ERROR:
         raise TimeoutError("timed out")
+
+
+def _delay_if_forced(name: str) -> None:
+    if name == settings.FORCE_SLOW_TOOL:
+        time.sleep(FORCED_DELAY_SECONDS)
 
 
 def _parse_arguments(

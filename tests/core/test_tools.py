@@ -3,6 +3,7 @@ from typing import Any
 import pytest
 from pydantic import BaseModel
 
+from app.core import tools
 from app.core.config import settings
 from app.core.tools import Tool, ToolRegistry
 from tests.helpers import EchoInput, EchoTool, ExplodingTool
@@ -59,6 +60,22 @@ class TestExecute:
         assert (forced.as_tool_result(), untouched.output) == (
             '{"error": "Tool failed: timed out"}',
             {"echoed": "oi"},
+        )
+
+    def test_tool_forced_to_be_slow_waits_before_running_while_others_do_not(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(settings, "FORCE_SLOW_TOOL", "echo")
+        sleeps: list[float] = []
+        monkeypatch.setattr("app.core.tools.time.sleep", sleeps.append)
+        registry = ToolRegistry([EchoTool(), ExplodingTool()])
+
+        slowed = registry.execute("echo", {"message": "oi", "times": 1})
+        registry.execute("explode", {"message": "oi"})
+
+        assert (slowed.output, sleeps) == (
+            {"echoed": "oi"},
+            [tools.FORCED_DELAY_SECONDS],
         )
 
     def test_raw_json_arguments_from_the_model_are_parsed(self) -> None:

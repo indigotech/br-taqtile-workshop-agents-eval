@@ -14,6 +14,7 @@ from app.core.messages import ChatMessage
 from app.core.model_client import ModelClient
 from app.core.observability import current_trace_id, flush, get_langfuse, observe_turn
 from app.core.terminal import Style, paint
+from app.core.tools import FORCED_DELAY_SECONDS
 from app.data.database import connect, reset_database
 from app.data.http import build_http_client
 from app.data.models import User
@@ -50,6 +51,12 @@ def _chat(connection: sqlite3.Connection, http_client: httpx.Client) -> None:
 
     if settings.FORCE_TOOL_ERROR:
         notice = f"A tool {settings.FORCE_TOOL_ERROR} vai falhar em toda chamada."
+        print(f"\n{paint(notice, Style.SYSTEM)}")
+    if settings.FORCE_SLOW_TOOL:
+        notice = (
+            f"A tool {settings.FORCE_SLOW_TOOL} vai demorar "
+            f"{FORCED_DELAY_SECONDS:g}s a mais em toda chamada."
+        )
         print(f"\n{paint(notice, Style.SYSTEM)}")
     greeting = f"Olá, {user.name}! Pra onde vamos? (digite 'sair' para encerrar)"
     print(f"\n{paint(greeting, Style.SYSTEM)}\n")

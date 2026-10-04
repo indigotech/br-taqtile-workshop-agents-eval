@@ -44,6 +44,7 @@ Sem Docker, dá pra rodar sem observabilidade: coloque `LANGFUSE_TRACING_ENABLED
 | --- | --- |
 | `make run` | Chat no terminal |
 | `make run-case-tool-error` | Chat com uma tool falhando em toda chamada (`ERROR_TOOL=get_user_profile`), pra ver um span de erro no Langfuse |
+| `make run-case-slow-tool` | Chat com uma tool demorando 5s a mais em toda chamada (`SLOW_TOOL=search_accommodations`), pra ela aparecer como a mais lenta na timeline |
 | `make smoke-test` | Roda uma conversa real de ponta a ponta num banco descartável |
 | `make run-dataset RUNS=3 CASES=id1,id2` | Roda os casos de `evals/dataset.jsonl` N vezes e salva as saídas em `evals/runs/` |
 | `make evaluate RESULTS=...` | Roda os evaluators registrados sobre um resultado do `run-dataset` |
