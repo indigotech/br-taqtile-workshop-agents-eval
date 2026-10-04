@@ -38,7 +38,7 @@ class TestBudgetAnalystAgent:
                     (
                         "calculate_budget",
                         {
-                            "user_id": 2,
+                            "budget_amount": 600,
                             "items": [
                                 {
                                     "category": "lodging",
@@ -56,7 +56,7 @@ class TestBudgetAnalystAgent:
             model_client, UserDataSource(connection), user_id=2
         )
 
-        result = agent.run([user_message("hotel de R$ 700 cabe?")])
+        result = agent.run([user_message("hotel de R$ 700 cabe em R$ 600?")])
 
         assert result.tool_executions[0].output is not None
         assert result.tool_executions[0].output["fits_total_budget"] is False

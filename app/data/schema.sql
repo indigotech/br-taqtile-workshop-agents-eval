@@ -17,15 +17,6 @@ CREATE TABLE users (
     home_city_id INTEGER NOT NULL REFERENCES cities (id)
 );
 
-CREATE TABLE budgets (
-    user_id INTEGER PRIMARY KEY REFERENCES users (id),
-    total_amount REAL NOT NULL,
-    lodging_amount REAL NOT NULL,
-    food_amount REAL NOT NULL,
-    activities_amount REAL NOT NULL,
-    currency TEXT NOT NULL DEFAULT 'BRL'
-);
-
 CREATE TABLE preferences (
     id INTEGER PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users (id),

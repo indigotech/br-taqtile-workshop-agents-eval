@@ -24,6 +24,10 @@ costuma funcionar: entender o pedido, ver os dados do usuário e as hospedagens,
 dar uma olhada no clima e no orçamento se fizer sentido, e procurar o que tem
 de bom para fazer e comer no destino.
 
+O orçamento muda a cada viagem e não fica salvo: se o usuário ainda não disse
+quanto quer gastar nesta viagem, pergunte. Passe esse valor nas instruções de
+analyze_budget.
+
 Para agilizar para o usuário, assim que tiver as informações principais já
 reserve a hospedagem mais bem avaliada com execute_action e entregue o roteiro
 final com generate_itinerary.
@@ -54,8 +58,8 @@ def build_orchestrator_agent(
                 build_database_agent(model_client, connection, user_id),
                 name="query_database",
                 description=(
-                    "Consulta o banco: perfil, orçamento e preferências do "
-                    "usuário, histórico de reservas e hospedagens do catálogo."
+                    "Consulta o banco: perfil e preferências do usuário, "
+                    "histórico de reservas e hospedagens do catálogo."
                 ),
             ),
             AgentTool(
@@ -74,7 +78,8 @@ def build_orchestrator_agent(
                 ),
                 name="analyze_budget",
                 description=(
-                    "Verifica se a viagem cabe no orçamento do usuário e sugere "
+                    "Verifica se a viagem cabe no orçamento que o usuário "
+                    "informou para ela (passe o valor nas instruções) e sugere "
                     "cortes quando não cabe."
                 ),
             ),

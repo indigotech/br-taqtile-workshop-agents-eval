@@ -6,7 +6,7 @@ from app.tools.user_profile_tool import GetUserProfileTool
 
 
 class TestGetUserProfileTool:
-    def test_profile_bundles_user_budget_and_preferences(
+    def test_profile_bundles_user_and_preferences(
         self, connection: sqlite3.Connection
     ) -> None:
         registry = ToolRegistry([GetUserProfileTool(UserDataSource(connection))])
@@ -20,14 +20,6 @@ class TestGetUserProfileTool:
                 "name": "Bruno Lima",
                 "email": "bruno@example.com",
                 "home_city_id": 1,
-            },
-            "budget": {
-                "user_id": 2,
-                "total_amount": 600.0,
-                "lodging_amount": 250.0,
-                "food_amount": 250.0,
-                "activities_amount": 100.0,
-                "currency": "BRL",
             },
             "preferences": [
                 {"category": "food", "value": "comida de boteco"},
@@ -46,6 +38,5 @@ class TestGetUserProfileTool:
         assert execution.output == {
             "found": False,
             "user": None,
-            "budget": None,
             "preferences": [],
         }
