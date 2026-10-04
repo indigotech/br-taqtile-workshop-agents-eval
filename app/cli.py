@@ -48,6 +48,9 @@ def _chat(connection: sqlite3.Connection, http_client: httpx.Client) -> None:
     session_id = str(uuid.uuid4())
     history: list[ChatMessage] = []
 
+    if settings.FORCE_TOOL_ERROR:
+        notice = f"A tool {settings.FORCE_TOOL_ERROR} vai falhar em toda chamada."
+        print(f"\n{paint(notice, Style.SYSTEM)}")
     greeting = f"Olá, {user.name}! Pra onde vamos? (digite 'sair' para encerrar)"
     print(f"\n{paint(greeting, Style.SYSTEM)}\n")
     while True:

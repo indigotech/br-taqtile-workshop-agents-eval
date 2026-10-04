@@ -7,6 +7,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
+from app.core.config import settings
 from app.core.messages import FunctionDeclaration
 from app.core.observability import observe_tool
 
@@ -103,12 +104,20 @@ class ToolRegistry:
             logger.warning("Invalid arguments for tool %s: %s", name, error)
             return None, f"Invalid arguments: {error}"
         try:
+            _fail_if_forced(name)
             result = tool.run(validated_arguments)
         except Exception as error:
             logger.exception("Tool %s failed", name)
             return None, f"Tool failed: {error}"
         logger.info("Tool %s succeeded", name)
         return result.model_dump(mode="json"), None
+
+
+def _fail_if_forced(name: str) -> None:
+    # Raised inside the tool's try block so the forced failure takes the exact
+    # path of a real one: same log, same error text shape, same ERROR span.
+    if name == settings.FORCE_TOOL_ERROR:
+        raise TimeoutError("timed out")
 
 
 def _parse_arguments(

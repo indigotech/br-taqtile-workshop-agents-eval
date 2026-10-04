@@ -3,6 +3,7 @@ from typing import Any
 import pytest
 from pydantic import BaseModel
 
+from app.core.config import settings
 from app.core.tools import Tool, ToolRegistry
 from tests.helpers import EchoInput, EchoTool, ExplodingTool
 
@@ -45,6 +46,20 @@ class TestExecute:
         execution = registry.execute("explode", {"message": "oi"})
 
         assert execution.as_tool_result() == '{"error": "Tool failed: boom"}'
+
+    def test_tool_forced_to_fail_returns_a_timeout_while_others_still_run(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(settings, "FORCE_TOOL_ERROR", "explode")
+        registry = ToolRegistry([EchoTool(), ExplodingTool()])
+
+        forced = registry.execute("explode", {"message": "oi"})
+        untouched = registry.execute("echo", {"message": "oi", "times": 1})
+
+        assert (forced.as_tool_result(), untouched.output) == (
+            '{"error": "Tool failed: timed out"}',
+            {"echoed": "oi"},
+        )
 
     def test_raw_json_arguments_from_the_model_are_parsed(self) -> None:
         registry = ToolRegistry([EchoTool()])

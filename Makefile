@@ -29,6 +29,13 @@ setup-env: ## Create .env from sample.env (never overwrites an existing .env)
 run: ## Start the terminal chat (reads .env)
 	@uv run python -m app.cli
 
+# Tool that run-case-tool-error makes fail on every call
+ERROR_TOOL ?= get_user_profile
+
+.PHONY: run-case-tool-error
+run-case-tool-error: ## Start the chat with one tool failing on every call (ERROR_TOOL=get_user_profile)
+	@FORCE_TOOL_ERROR=$(ERROR_TOOL) uv run python -m app.cli
+
 .PHONY: smoke-test
 smoke-test: ## Run a real two-turn conversation (needs MODEL_API_KEY) on a throwaway DB
 	@uv run python -m scripts.smoke_test

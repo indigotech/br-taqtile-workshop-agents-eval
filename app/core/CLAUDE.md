@@ -41,6 +41,8 @@ The conversation travels as `ChatMessage` models in the Chat Completions shape (
 
 A `Tool[InputT, OutputT]` declares `name`, `description`, `input_model` and `output_model`; its function declaration is the input model's JSON schema, so **field descriptions are part of the prompt**. `ToolRegistry.execute` takes the arguments as a dict or as the raw JSON string of a tool call, and never raises — malformed JSON, unknown tools, invalid arguments and exceptions all become an `error` the model reads back.
 
+`settings.FORCE_TOOL_ERROR` names a tool that fails on every call with a timeout, through the same path as a real exception, so a live demo can show an `ERROR` span. Only `make run-case-tool-error` sets it, from the shell environment.
+
 `run_tool_loop` runs the tool calls itself, so each one becomes its own span. It appends the model's reply exactly as returned (tool call ids and raw arguments included, since the next request must replay them), answers each tool call with its own `tool` message, and stops at the first plain-text answer or at `max_iterations`.
 
 ## Agent (`agent.py`)

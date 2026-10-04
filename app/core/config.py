@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     # up and returns whatever the model said last.
     TOOL_LOOP_MAX_ITERATIONS: int = 10
 
+    # Name of a tool that fails on every call, for demonstrating an ERROR span
+    # live. Only `make run-case-tool-error` sets it, from the shell environment.
+    FORCE_TOOL_ERROR: str | None = None
+
     LANGFUSE_TRACING_ENABLED: bool = True
     LANGFUSE_BASE_URL: str = "http://localhost:3000"
     LANGFUSE_PUBLIC_KEY: str | None = None
