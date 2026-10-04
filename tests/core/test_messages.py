@@ -1,4 +1,9 @@
-from app.core.messages import ChatMessage, ToolCall, text_exchanges
+from app.core.messages import (
+    ChatMessage,
+    ToolCall,
+    history_for_next_turn,
+    text_exchanges,
+)
 
 
 class TestAsParam:
@@ -61,4 +66,28 @@ class TestTextExchanges:
             {"role": "user", "content": "Paraty?", "tool_calls": []},
             {"role": "assistant", "content": "Vou ver.", "tool_calls": []},
             {"role": "assistant", "content": "Achei a Casa Caiçara.", "tool_calls": []},
+        ]
+
+
+class TestHistoryForNextTurn:
+    def test_latest_turn_keeps_its_tool_traffic_and_earlier_turns_keep_text(
+        self,
+    ) -> None:
+        earlier_tool_call = ToolCall(id="call_1", name="echo", arguments="{}")
+        latest_tool_call = ToolCall(id="call_2", name="echo", arguments="{}")
+        messages = [
+            ChatMessage(role="user", content="Paraty?"),
+            ChatMessage(role="assistant", tool_calls=[earlier_tool_call]),
+            ChatMessage(role="tool", tool_call_id="call_1", content="{}"),
+            ChatMessage(role="assistant", content="Casa Caiçara, R$ 260."),
+            ChatMessage(role="user", content="Pode reservar"),
+            ChatMessage(role="assistant", tool_calls=[latest_tool_call]),
+            ChatMessage(role="tool", tool_call_id="call_2", content="{}"),
+            ChatMessage(role="assistant", content="Reservado."),
+        ]
+
+        assert history_for_next_turn(messages) == [
+            messages[0],
+            ChatMessage(role="assistant", content="Casa Caiçara, R$ 260."),
+            *messages[4:],
         ]

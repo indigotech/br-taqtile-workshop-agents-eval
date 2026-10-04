@@ -4,7 +4,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict
 
 from app.core.config import settings
-from app.core.messages import ChatMessage, GenerationConfig, text_exchanges
+from app.core.messages import ChatMessage, GenerationConfig, history_for_next_turn
 from app.core.model_client import ModelClient
 from app.core.observability import observe_agent
 from app.core.tool_loop import run_tool_loop
@@ -21,7 +21,7 @@ class AgentResult(BaseModel):
     stopped_by_iteration_limit: bool
 
     def next_turn_history(self) -> list[ChatMessage]:
-        return text_exchanges(self.messages)
+        return history_for_next_turn(self.messages)
 
 
 class Agent:

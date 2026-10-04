@@ -71,13 +71,27 @@ class GenerationConfig(BaseModel):
     prompt_cache_key: str | None = None
 
 
+def history_for_next_turn(messages: list[ChatMessage]) -> list[ChatMessage]:
+    """The conversation to carry into the next user turn: the latest turn in
+    full, every earlier turn as its user and assistant text only.
+
+    Every model call resends the history, and the tool traffic of old turns is
+    most of it while their replies already summarize what it found. The latest
+    turn keeps its tool results because the next message usually acts on them
+    (confirming a booking needs the ids and prices just looked up)."""
+    latest_turn_start = max(
+        (index for index, message in enumerate(messages) if message.role == "user"),
+        default=0,
+    )
+    return [
+        *text_exchanges(messages[:latest_turn_start]),
+        *messages[latest_turn_start:],
+    ]
+
+
 def text_exchanges(messages: list[ChatMessage]) -> list[ChatMessage]:
     """The user and assistant text of a conversation, without tool calls and
-    tool results.
-
-    Carried from one user turn to the next instead of the full history: every
-    model call resends the history, and the tool traffic of earlier turns is
-    most of it while the replies already summarize what it found."""
+    tool results."""
     return [
         ChatMessage(role=message.role, content=message.content)
         for message in messages

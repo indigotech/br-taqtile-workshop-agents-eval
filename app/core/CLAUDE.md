@@ -60,7 +60,7 @@ A `Tool[InputT, OutputT]` declares `name`, `description`, `input_model` and `out
 
 `Agent` = name + system prompt + tools + model parameters (model, temperature, iteration limit), run through `run_tool_loop` inside its own agent span. Concrete agents live in `app/agents/` and are built from this class — don't subclass it to change the loop.
 
-- `AgentResult.next_turn_history()` is what the entry points carry to the next user turn: only the user and assistant text (`text_exchanges` in `messages.py`). Earlier turns' tool calls and results are dropped — they are most of what every call would resend, and the replies already summarize them.
+- `AgentResult.next_turn_history()` is what the entry points carry to the next user turn (`history_for_next_turn` in `messages.py`): the latest turn in full, earlier turns as user and assistant text only. Old tool calls and results are most of what every call would resend, while the latest ones are what the next message usually acts on (confirming a booking needs the ids just looked up).
 - `response_model` asks for JSON matching that model's schema. The result text comes back **unparsed**: whether it validates is for the caller — or a workshop eval — to check.
 
 ## Agents as tools (`agent_tool.py`)
