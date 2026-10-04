@@ -22,7 +22,6 @@ Orçamento informado pelo usuário: R$ 2.000,00. Gastos estimados: hospedagem
 R$ 450,00, alimentação R$ 600,00, atividades R$ 300,00; total R$ 1.350,00.
 """
 
-# O produto mostra datas como 10/10.
 ISO_DATE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
 # EMOJI = re.compile("[\U0001F300-\U0001FAFF\U00002600-\U000027BF]")
 # RESERVATION_NUMBER = re.compile(r"reserva\D{0,20}\b5\b", re.IGNORECASE)
@@ -43,8 +42,6 @@ def test_itinerary_has_no_iso_dates(itineraries: list[str]) -> None:
 # Atividade 2: o roteiro cita o número da reserva (a regex tem que casar).
 
 
-# Module scope: every test in this file checks the same itineraries, so the
-# model is called `runs` times per file instead of per test.
 @pytest.fixture(scope="module")
 def itineraries(runs: int) -> list[str]:
     with unit_test_trace(__name__):
