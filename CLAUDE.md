@@ -17,7 +17,7 @@ make lint-fix                        # auto-fix what ruff can; type errors need 
 
 `test.env` is committed and `tests/conftest.py` loads it (overriding any `.env`) before the app is imported, so testing needs no local configuration and never sends traces anywhere. Each test gets its own seeded SQLite file under `tmp_path`, so running `pytest` directly is safe — it can never touch `data/planner.db`. Use `make test TEST_PATH=tests/core` to narrow by path and `make test ARGS="-k tool_loop"` to narrow by name.
 
-Tests never call the real model API: use `ScriptedModelClient` from `tests/helpers.py`, which replays canned responses and records every request.
+Tests never call the real model API: use `ScriptedModelClient` from `tests/helpers.py`, which replays canned responses and records every request. Unit tests that do call the real model live in `evals/unit_tests/` and run only through `make test-model` (see `app/evals/CLAUDE.md`).
 
 ## Running Locally
 
@@ -28,6 +28,7 @@ make run                             # terminal chat; creates and seeds the DB o
 make reset-db                        # recreate data/planner.db from schema.sql + seed.sql
 make smoke-test                      # real two-turn conversation on a throwaway DB (needs MODEL_API_KEY)
 make run-dataset RUNS=3              # play evals/dataset.jsonl N times, saving to evals/runs/ (needs MODEL_API_KEY)
+make test-model RUNS=3               # pytest on evals/unit_tests against the real model; skipped without MODEL_API_KEY
 ```
 
 Set `LANGFUSE_TRACING_ENABLED=false` in `.env` to run without Langfuse.
@@ -40,7 +41,7 @@ A lean, by-layer take on the Clean Architecture used in Taqtile's AI projects, u
 - **`data/`** — the SQLite schema and seed, the connection helpers, row models, one datasource per aggregate, and the clients for external public APIs.
 - **`tools/`** — concrete tools the model can call, each with a Pydantic input and output model.
 - **`agents/`** — concrete agents: their prompts, the tools they get, and their model parameters. An orchestrator agent talks to the user and delegates to the specialists through `AgentTool`.
-- **`evals/`** — the evaluation harness: the dataset and the runner that produces the `RunRecord`s the workshop's evaluators are built on.
+- **`evals/`** — the evaluation harness: the dataset and the runner that produces the `RunRecord`s the workshop's evaluators are built on. Its real-model pytest tests live outside `app/`, in `evals/unit_tests/`.
 - **`cli.py`** — the terminal entrypoint.
 
 Each layer has its own `CLAUDE.md` with detailed conventions — read it before working in that layer.

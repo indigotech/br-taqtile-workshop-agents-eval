@@ -53,6 +53,7 @@ Sem Docker, dá pra rodar sem observabilidade: coloque `LANGFUSE_TRACING_ENABLED
 | `make run-langfuse` / `make stop-langfuse` | Sobe / para o Langfuse local |
 | `make clean-langfuse` | Remove o Langfuse e todos os traces |
 | `make test` | Roda os testes (sem chamar a API do Modelo) |
+| `make test-model RUNS=3` | Roda os testes de `evals/unit_tests/` chamando o Modelo de verdade (gasta tokens) |
 | `make lint-check` / `make lint-fix` | Lint e checagem de tipos / correção automática |
 | `make help` | Lista todos os comandos |
 
@@ -61,6 +62,19 @@ Sem Docker, dá pra rodar sem observabilidade: coloque `LANGFUSE_TRACING_ENABLED
 `make run-dataset RUNS=3` roda cada caso de `evals/dataset.jsonl` 3 vezes e salva as saídas em `evals/runs/<data-hora>/results.jsonl`, um `RunRecord` por linha. Os evaluators são construídos durante o workshop em cima desses registros.
 
 Cada execução faz uma dúzia ou mais de chamadas ao Modelo. Enquanto estiver ajustando, use `CASES=id1,id2` pra rodar só alguns casos e não gastar a cota gratuita.
+
+### Testes unitários com o Modelo
+
+Testes em pytest que chamam o Modelo de verdade (uma regex na resposta de um agente, a validação de uma saída estruturada) ficam em `evals/unit_tests/`, nunca em `tests/`: os testes de `tests/` não chamam o Modelo e são os que rodam no `make test` e no CI. Os de `evals/unit_tests/` usam o seu `.env` e rodam só com:
+
+```bash
+make test-model                                         # todos, cada checagem repetida RUNS=3 vezes
+make test-model RUNS=5 TEST_PATH=evals/unit_tests/test_x.py ARGS="-s -k nome"
+```
+
+Sem uma `MODEL_API_KEY` de verdade no `.env`, a pasta inteira é pulada com o motivo. Os testes recebem as fixtures `connection` (um banco SQLite novo e populado por teste, nunca o `data/planner.db`), `model_client` (um `ModelClient()` real) e `runs` (o valor de `RUNS`). Cada teste vira um trace no Langfuse com a tag `unit-test`, se o tracing estiver ligado no `.env`.
+
+Cada execução gasta tokens e a resposta do Modelo muda de uma vez pra outra: repita a checagem `runs` vezes e compare a taxa de acerto com um limite, em vez de depender de uma única resposta.
 
 ## Problemas comuns
 

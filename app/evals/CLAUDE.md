@@ -15,3 +15,14 @@ Keep the cases tied to the seed: user ids and catalog cities come from `app/data
 `run_case` plays one case against the orchestrator on a **freshly seeded throwaway database** (runs never see each other's reservations) and returns a `RunRecord`: per turn, the response, each delegation to a specialist (`AgentCall`), reservations created, trace id, latency, and any model API error or turn over the token budget (either ends that run instead of the whole dataset). Between turns it carries the history the same way as the CLI (`next_turn_history`: the latest turn in full, earlier ones as text only). Traces are tagged `dataset` + the case id in Langfuse.
 
 `make run-dataset RUNS=3 CASES=id1,id2` runs it against the real API and writes `evals/runs/<timestamp>/results.jsonl` (git-ignored). Each run makes a dozen or more model calls — narrow with `CASES` while iterating.
+
+## Real-model unit tests (`evals/unit_tests/`)
+
+pytest tests that call the **real model** — the workshop's checks on an agent's output (a regex over a reply, validating a structured response against its model) — live in `evals/unit_tests/`, never in `tests/`. `tests/` loads `test.env` and never calls the model; `evals/unit_tests/conftest.py` uses `.env` as-is, and pyproject's `testpaths = ["tests"]` keeps `make test` / `make test-ci` (and CI) from ever collecting them. Never run both directories in the same pytest invocation: whichever conftest loads first decides the configuration the app is built with.
+
+- **No real key, no run.** The conftest checks `MODEL_API_KEY` (shell or `.env`) before anything under `app/` is imported; when it is missing or still a placeholder (`changethis`, `test`), every file there is skipped without being imported and the reason is printed. The check is `missing_model_api_key_reason` in `evals/unit_tests/model_api_key.py`, unit-tested in `tests/evals/`.
+- **Fixtures:** `connection` (a freshly seeded throwaway SQLite file per test, as in `tests/`), `model_client` (a real `ModelClient()`), and `runs` (the `RUNS` environment variable, default 3).
+- **Tracing** follows `.env`: each test is one Langfuse trace tagged `unit-test`, flushed when the session ends. With `LANGFUSE_TRACING_ENABLED=false` nothing is sent. There is no per-test token budget, since a test repeating a turn `runs` times would exceed the per-turn one.
+- `make test-model` runs them (`RUNS=5`, `TEST_PATH=evals/unit_tests/test_x.py`, `ARGS="-s -k name"`).
+
+Every test costs tokens and its result varies from run to run: repeat a stochastic check `runs` times and assert a pass rate against a threshold rather than a single outcome, and narrow with `TEST_PATH` / `-k` while iterating.

@@ -1,4 +1,4 @@
-sources = app tests scripts
+sources = app tests scripts evals
 
 # pytest verbosity — override for a compact single-run summary, e.g. make test PYTEST_FLAGS=-q
 PYTEST_FLAGS ?= -vv
@@ -79,6 +79,15 @@ test: ## Run tests (TEST_PATH narrows by path, ARGS forwards flags, e.g. make te
 .PHONY: test-ci
 test-ci: ## Run tests with a compact one-shot summary
 	@$(MAKE) test PYTEST_FLAGS="-q"
+
+# Target-specific, so they don't inherit the defaults of test (tests/) and
+# run-dataset (RUNS=1); values passed on the command line still win.
+test-model: TEST_PATH = evals/unit_tests
+test-model: RUNS = 3
+
+.PHONY: test-model
+test-model: ## Run evals/unit_tests against the real API, costs tokens (RUNS=3, TEST_PATH, ARGS="-s -k ...")
+	@RUNS=$(RUNS) uv run pytest $(TEST_PATH) $(PYTEST_FLAGS) $(ARGS)
 
 .PHONY: lint-check
 lint-check: ## Run ruff check + ruff format check + mypy --strict
