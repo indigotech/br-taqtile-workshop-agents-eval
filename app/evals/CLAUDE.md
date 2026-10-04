@@ -8,7 +8,7 @@ One `EvalCase` per line of `evals/dataset.jsonl`: the user, the messages to play
 
 Dates are **placeholders** (`{next_saturday}`, `{next_saturday_br}`, `{saturday_in_5_weeks}`, …) resolved by `load_dataset(path, today)`, because the weather forecast only covers ~16 days ahead. Every `RunRecord` stores its resolved case, so evaluating old results never re-resolves dates.
 
-Keep the cases tied to the seed: user ids, budgets and catalog cities come from `app/data/seed.sql`.
+Keep the cases tied to the seed: user ids and catalog cities come from `app/data/seed.sql`. The budget is never stored, so a case states it in its messages, like a user would; `max_lodging_total` is the lodging limit that case states.
 
 ## Runner (`runner.py`, `records.py`)
 

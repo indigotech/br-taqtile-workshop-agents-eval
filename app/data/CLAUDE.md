@@ -4,7 +4,7 @@ All access to SQLite and to external APIs lives here. No agent logic. Imports on
 
 ## Schema and seed
 
-`schema.sql` is the source of truth for the database layout and `seed.sql` its fixture data; `reset_database` deletes the file and replays both. There are no migrations — change the SQL files and run `make reset-db`. Seed data is deliberately varied (a tight budget, a generous one, dietary restrictions, a user with a dog) so different users exercise different agent paths; keep that property when editing it, and update the counts in `tests/data/test_database.py`.
+`schema.sql` is the source of truth for the database layout and `seed.sql` its fixture data; `reset_database` deletes the file and replays both. There are no migrations — change the SQL files and run `make reset-db`. Seed data is deliberately varied (dietary restrictions, a user without a car, a user with a dog) so different users exercise different agent paths; keep that property when editing it, and update the counts in `tests/data/test_database.py`.
 
 Money is `REAL` in reais — precision is irrelevant for a trip planner and it keeps tools and prompts free of cents conversions.
 
@@ -20,6 +20,7 @@ One class per aggregate (`UserDataSource`), taking the connection in its constru
 - Names the columns it selects. `SELECT *` couples the model to the table layout.
 - Uses `?` placeholders, never string formatting, for every value.
 - Returns `None` for a missing row and an empty list for an empty result — never raises for "not found".
+- Matches names typed by a person (`find_by_name`) with `normalize_name` (`name_matching.py`), in Python: SQLite's `lower()` only folds ASCII, so "sao paulo" would never match "São Paulo" in SQL.
 - A write commits and then reads the row back, so the returned model carries DB-generated values (`id`, `created_at`).
 
 ## External API clients

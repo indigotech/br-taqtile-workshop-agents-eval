@@ -14,14 +14,6 @@ INSERT INTO users (id, name, email, home_city_id) VALUES
     (3, 'Carla Mendes', 'carla@example.com', 2),
     (4, 'Diego Rocha', 'diego@example.com', 6);
 
--- Orçamentos variados de propósito: um apertado (Bruno), um folgado (Carla)
--- e dois intermediários, pra que "cabe no orçamento?" tenha respostas diferentes.
-INSERT INTO budgets (user_id, total_amount, lodging_amount, food_amount, activities_amount) VALUES
-    (1, 1500.00, 700.00, 500.00, 300.00),
-    (2, 600.00, 250.00, 250.00, 100.00),
-    (3, 4000.00, 2200.00, 1200.00, 600.00),
-    (4, 1200.00, 500.00, 450.00, 250.00);
-
 INSERT INTO preferences (user_id, category, value) VALUES
     (1, 'food', 'comida japonesa'),
     (1, 'food', 'cafés'),

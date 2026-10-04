@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 _USER_ID = 1
 _MESSAGES = (
     "Quero passar o próximo fim de semana em Paraty com meu namorado. "
-    "Curtimos comida japonesa e trilhas.",
+    "Curtimos comida japonesa e trilhas. Temos uns R$ 2.000 pra viagem.",
     "Pode reservar a hospedagem que você sugeriu.",
 )
 

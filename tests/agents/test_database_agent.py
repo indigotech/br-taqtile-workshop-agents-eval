@@ -17,7 +17,7 @@ class TestDatabaseAgent:
         model_client = ScriptedModelClient([text_response("ok")])
         agent = build_database_agent(model_client, connection, user_id=2)
 
-        agent.run([user_message("qual meu orçamento?")])
+        agent.run([user_message("quais são minhas preferências?")])
 
         config = model_client.requests[0].config
         assert "id 2" in str(config.system_prompt)
@@ -34,12 +34,15 @@ class TestDatabaseAgent:
         model_client = ScriptedModelClient(
             [
                 function_call_response(("get_user_profile", {"user_id": 2})),
-                text_response("Seu orçamento é R$ 600."),
+                text_response("Você curte comida de boteco."),
             ]
         )
         agent = build_database_agent(model_client, connection, user_id=2)
 
-        result = agent.run([user_message("qual meu orçamento?")])
+        result = agent.run([user_message("quais são minhas preferências?")])
 
         assert result.tool_executions[0].output is not None
-        assert result.tool_executions[0].output["budget"]["total_amount"] == 600.0
+        assert result.tool_executions[0].output["preferences"][0] == {
+            "category": "food",
+            "value": "comida de boteco",
+        }

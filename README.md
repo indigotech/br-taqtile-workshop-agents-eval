@@ -1,6 +1,6 @@
 # Planejador de rolê — workshop de avaliação de agentes
 
-Sistema multi-agente que planeja um fim de semana: consulta orçamento e preferências do usuário num SQLite local, clima, eventos e restaurantes, verifica se cabe no orçamento e reserva a hospedagem. Ele chama o Modelo direto pelo SDK e manda os traces pra um Langfuse local.
+Sistema multi-agente que planeja um fim de semana: consulta as preferências do usuário num SQLite local, clima, eventos e restaurantes, verifica se cabe no orçamento da viagem e reserva a hospedagem. Ele chama o Modelo direto pelo SDK e manda os traces pra um Langfuse local.
 
 ## Como funciona
 
@@ -9,10 +9,10 @@ Você conversa com um **orquestrador**, que delega cada parte do trabalho a um a
 | Agente | O que faz |
 | --- | --- |
 | Interpretador de input | Extrai destino, datas, nº de pessoas e preferências |
-| Banco | Consulta orçamento, preferências, histórico e hospedagens no SQLite |
+| Banco | Consulta perfil, preferências, histórico e hospedagens no SQLite |
 | Dados públicos | Clima (Open-Meteo), coordenadas (OpenStreetMap) e feriados (Nager.Date) |
 | Pesquisa | Sugere eventos e restaurantes no destino |
-| Analista de orçamento | Estima os custos e verifica se cabe no orçamento |
+| Analista de orçamento | Estima os custos e verifica se cabe no orçamento informado pra viagem |
 | Ação | Reserva a hospedagem (mock) e registra a decisão no banco |
 | Gerador de output | Escreve o roteiro final |
 
@@ -33,6 +33,8 @@ make setup-env      # cria o .env a partir do sample.env
 make run-langfuse   # sobe o Langfuse em http://localhost:3000
 make run            # abre o chat no terminal
 ```
+
+Ao abrir, o chat pergunta seu nome. Quem já tem cadastro (os usuários de exemplo são Ana, Bruno, Carla e Diego) vai direto pra conversa; quem não tem pode se cadastrar ali mesmo, com nome, cidade onde mora e e-mail. O orçamento não fica salvo: muda a cada viagem, então o planejador pergunta quando você não diz.
 
 Pra entrar no Langfuse use `workshop@example.com` / `workshop123`. As chaves de API já vêm configuradas no `sample.env`, então não precisa gerar nenhuma. A cada resposta, o chat imprime o link do trace.
 

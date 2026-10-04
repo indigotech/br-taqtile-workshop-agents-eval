@@ -15,6 +15,8 @@ Concrete agents, one module per agent (`*_agent.py`), each exposing a `build_*_a
 | `action` | `execute_action` | `search_accommodations`, `create_reservation`, `record_decision` |
 | `output_generator` | `generate_itinerary` | none |
 
+The trip budget is never stored: it changes from trip to trip, so the orchestrator asks for it when the user has not said it and passes it in the `analyze_budget` instructions, and `calculate_budget` takes it as an argument.
+
 The orchestrator is the only agent that sees the conversation; the others get a fresh one per call, holding only the `instructions` the orchestrator wrote. It is also the only module allowed to import other agents.
 
 ## Conventions

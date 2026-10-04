@@ -5,7 +5,6 @@ from app.data.accommodation_data_source import AccommodationDataSource
 from app.data.city_data_source import CityDataSource
 from app.data.models import (
     Accommodation,
-    Budget,
     City,
     Preference,
     ReservationDetails,
@@ -21,7 +20,6 @@ class DatabaseSnapshotInput(BaseModel):
 
 class UserSnapshot(BaseModel):
     user: User
-    budget: Budget | None
     preferences: list[Preference]
     reservations: list[ReservationDetails]
 
@@ -35,7 +33,7 @@ class DatabaseSnapshotOutput(BaseModel):
 class DatabaseSnapshotTool(Tool[DatabaseSnapshotInput, DatabaseSnapshotOutput]):
     name = "get_database_snapshot"
     description = (
-        "Traz de uma vez todos os dados do banco: usuários com orçamentos, "
+        "Traz de uma vez todos os dados do banco: usuários com "
         "preferências e reservas, cidades e todo o catálogo de hospedagens."
     )
     input_model = DatabaseSnapshotInput
@@ -58,7 +56,6 @@ class DatabaseSnapshotTool(Tool[DatabaseSnapshotInput, DatabaseSnapshotOutput]):
             users=[
                 UserSnapshot(
                     user=user,
-                    budget=self.user_data_source.get_budget(user.id),
                     preferences=self.user_data_source.list_preferences(user.id),
                     reservations=self.reservation_data_source.list_by_user(user.id),
                 )

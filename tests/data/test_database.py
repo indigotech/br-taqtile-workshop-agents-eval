@@ -20,7 +20,6 @@ class TestResetDatabase:
             for table in (
                 "cities",
                 "users",
-                "budgets",
                 "preferences",
                 "accommodations",
                 "reservations",
@@ -31,7 +30,6 @@ class TestResetDatabase:
         assert counts == {
             "cities": 8,
             "users": 4,
-            "budgets": 4,
             "preferences": 14,
             "accommodations": 15,
             "reservations": 4,

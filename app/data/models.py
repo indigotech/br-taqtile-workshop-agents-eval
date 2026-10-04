@@ -11,15 +11,6 @@ class User(BaseModel):
     home_city_id: int
 
 
-class Budget(BaseModel):
-    user_id: int
-    total_amount: float
-    lodging_amount: float
-    food_amount: float
-    activities_amount: float
-    currency: str
-
-
 class Preference(BaseModel):
     category: Literal["food", "activity", "lodging", "restriction"]
     value: str
