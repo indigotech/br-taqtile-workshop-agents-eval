@@ -68,3 +68,18 @@ class GenerationConfig(BaseModel):
     temperature: float | None = None
     tools: list[FunctionDeclaration] = Field(default_factory=list)
     response_json_schema: dict[str, Any] | None = None
+    prompt_cache_key: str | None = None
+
+
+def text_exchanges(messages: list[ChatMessage]) -> list[ChatMessage]:
+    """The user and assistant text of a conversation, without tool calls and
+    tool results.
+
+    Carried from one user turn to the next instead of the full history: every
+    model call resends the history, and the tool traffic of earlier turns is
+    most of it while the replies already summarize what it found."""
+    return [
+        ChatMessage(role=message.role, content=message.content)
+        for message in messages
+        if message.role in ("user", "assistant") and message.content
+    ]

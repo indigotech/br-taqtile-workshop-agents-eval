@@ -1,4 +1,7 @@
 import logging
+from collections.abc import Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from typing import Any
 
 from openai import OpenAI
@@ -16,6 +19,11 @@ logger = logging.getLogger(__name__)
 # or a transient 5xx would otherwise sink whole turns: the SDK retries those
 # with exponential backoff, honoring the provider's retry-after.
 _MAX_RETRIES = 5
+
+# With many sessions sharing the same prompt prefix (a class running the same
+# agents at once), OpenAI routes them all by that prefix and spills the overflow
+# to machines without the cache; a per-session key spreads them out.
+_prompt_cache_key: ContextVar[str | None] = ContextVar("prompt_cache_key", default=None)
 
 
 class ModelClient:
@@ -39,6 +47,7 @@ class ModelClient:
         """The model's reply as an assistant message, ready to append to the
         history."""
         chosen_model = model or self.model
+        config = config.model_copy(update={"prompt_cache_key": _prompt_cache_key.get()})
         ensure_within_budget()
         with observe_generation(
             name=generation_name,
@@ -91,6 +100,9 @@ class ModelClient:
             request["temperature"] = config.temperature
         if config.tools:
             request["tools"] = [tool.as_param() for tool in config.tools]
+        # An OpenAI extension: other Chat Completions endpoints may reject it.
+        if config.prompt_cache_key is not None and settings.MODEL_BASE_URL is None:
+            request["prompt_cache_key"] = config.prompt_cache_key
         if config.response_json_schema is not None:
             request["response_format"] = {
                 "type": "json_schema",
@@ -119,6 +131,17 @@ class ModelClient:
                 max_retries=_MAX_RETRIES,
             )
         return self._client
+
+
+@contextmanager
+def prompt_cache_session(key: str) -> Iterator[None]:
+    """Tags every model call made inside it with `key` as the OpenAI
+    `prompt_cache_key`; enter it once per conversation."""
+    context_token = _prompt_cache_key.set(key)
+    try:
+        yield
+    finally:
+        _prompt_cache_key.reset(context_token)
 
 
 def _message_params(
@@ -164,8 +187,16 @@ def _usage_details(completion: ChatCompletion) -> dict[str, int]:
     usage = completion.usage
     if usage is None:
         return {}
+    cached_tokens = (
+        usage.prompt_tokens_details.cached_tokens
+        if usage.prompt_tokens_details is not None
+        else None
+    )
+    # Langfuse's convention: `input` holds only the uncached tokens and the
+    # cached ones go apart, so each is priced at its own rate and none twice.
     details = {
-        "input": usage.prompt_tokens,
+        "input": usage.prompt_tokens - (cached_tokens or 0),
+        "input_cached_tokens": cached_tokens,
         "output": usage.completion_tokens,
         "reasoning": (
             usage.completion_tokens_details.reasoning_tokens

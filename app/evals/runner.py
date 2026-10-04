@@ -12,7 +12,7 @@ import openai
 from app.agents.orchestrator_agent import build_orchestrator_agent
 from app.core.agent import Agent, user_message
 from app.core.messages import ChatMessage
-from app.core.model_client import ModelClient
+from app.core.model_client import ModelClient, prompt_cache_session
 from app.core.observability import current_trace_id, observe_turn
 from app.core.token_budget import TokenBudgetExceededError, turn_token_budget
 from app.core.tools import ToolExecution
@@ -97,6 +97,7 @@ def _play_turn(
     }
     started_at = time.perf_counter()
     with (
+        prompt_cache_session(session_id),
         turn_token_budget(),
         observe_turn(
             session_id=session_id,
@@ -139,7 +140,7 @@ def _play_turn(
         stopped_by_iteration_limit=result.stopped_by_iteration_limit,
         error=None,
     )
-    return turn, result.messages
+    return turn, result.next_turn_history()
 
 
 def _agent_call(execution: ToolExecution) -> AgentCall:

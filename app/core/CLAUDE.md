@@ -35,6 +35,8 @@ The conversation travels as `ChatMessage` models in the Chat Completions shape (
 - `settings.MODEL_BASE_URL` points the client at any provider with a Chat Completions compatible endpoint (DeepSeek, Gemini's OpenAI endpoint); unset means OpenAI.
 - `settings.MODEL_REASONING_EFFORT` (default `none`) goes on every request: gpt-6-luna rejects function tools and any non-default temperature on Chat Completions while reasoning is on. Empty leaves the parameter out for providers that don't know it.
 - The SDK client retries rate limits (429) and transient 5xx with exponential backoff (`_MAX_RETRIES`): one orchestrated turn makes a dozen or more calls.
+- `prompt_cache_session(session_id)` tags every call inside it with that OpenAI `prompt_cache_key` (sent only when `MODEL_BASE_URL` is unset). Each entry point enters it per conversation: with a whole class running the same prompts, a per-session key keeps the automatic prompt cache hitting.
+- Usage goes to Langfuse with the cached input apart (`input` = uncached, `input_cached_tokens` = cached), so each is priced at its own rate. The token budget still counts both at full weight.
 - `embed(texts)` returns one vector per text with `settings.MODEL_EMBEDDING_MODEL` — the building block for cosine-similarity evals.
 
 ## Token budget (`token_budget.py`)
@@ -58,6 +60,7 @@ A `Tool[InputT, OutputT]` declares `name`, `description`, `input_model` and `out
 
 `Agent` = name + system prompt + tools + model parameters (model, temperature, iteration limit), run through `run_tool_loop` inside its own agent span. Concrete agents live in `app/agents/` and are built from this class — don't subclass it to change the loop.
 
+- `AgentResult.next_turn_history()` is what the entry points carry to the next user turn: only the user and assistant text (`text_exchanges` in `messages.py`). Earlier turns' tool calls and results are dropped — they are most of what every call would resend, and the replies already summarize them.
 - `response_model` asks for JSON matching that model's schema. The result text comes back **unparsed**: whether it validates is for the caller — or a workshop eval — to check.
 
 ## Agents as tools (`agent_tool.py`)

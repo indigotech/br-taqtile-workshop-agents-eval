@@ -15,7 +15,7 @@ from app.core.agent import user_message
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.core.messages import ChatMessage
-from app.core.model_client import ModelClient
+from app.core.model_client import ModelClient, prompt_cache_session
 from app.core.observability import current_trace_id, flush, get_langfuse, observe_turn
 from app.core.terminal import Style, paint
 from app.core.token_budget import TokenBudgetExceededError, turn_token_budget
@@ -58,6 +58,7 @@ def _run_conversation(connection: sqlite3.Connection) -> bool:
             print(f"\n{paint('usuário> ', Style.USER_PROMPT)}{message}")
             try:
                 with (
+                    prompt_cache_session(session_id),
                     turn_token_budget() as budget,
                     observe_turn(
                         session_id=session_id,
@@ -71,7 +72,7 @@ def _run_conversation(connection: sqlite3.Connection) -> bool:
             except TokenBudgetExceededError as error:
                 logger.error("Smoke test failed: %s", error)
                 return False
-            history = result.messages
+            history = result.next_turn_history()
             print(f"\n{paint(f'planejador> {result.text}', Style.BOT_REPLY)}")
             agents_called = [execution.name for execution in result.tool_executions]
             print(paint(f"  agentes chamados: {agents_called}", Style.AUXILIARY))
