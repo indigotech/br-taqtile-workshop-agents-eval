@@ -8,6 +8,7 @@ from openai.types.chat import ChatCompletion
 from app.core.config import settings
 from app.core.messages import ChatMessage, GenerationConfig, ToolCall
 from app.core.observability import observe_embedding, observe_generation
+from app.core.token_budget import charge_tokens, ensure_within_budget
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,7 @@ class ModelClient:
         """The model's reply as an assistant message, ready to append to the
         history."""
         chosen_model = model or self.model
+        ensure_within_budget()
         with observe_generation(
             name=generation_name,
             model=chosen_model,
@@ -49,6 +51,7 @@ class ModelClient:
         ) as generation:
             logger.debug("Calling %s with %s messages", chosen_model, len(messages))
             completion = self._create_completion(chosen_model, messages, config)
+            charge_tokens(_billed_tokens(completion))
             reply = _assistant_message(completion)
             generation.update(
                 output=reply.model_dump(mode="json", exclude_none=True),
@@ -172,3 +175,9 @@ def _usage_details(completion: ChatCompletion) -> dict[str, int]:
         "total": usage.total_tokens,
     }
     return {name: count for name, count in details.items() if count is not None}
+
+
+def _billed_tokens(completion: ChatCompletion) -> int:
+    if completion.usage is None:
+        return 0
+    return completion.usage.prompt_tokens + completion.usage.completion_tokens

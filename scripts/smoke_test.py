@@ -18,6 +18,7 @@ from app.core.messages import ChatMessage
 from app.core.model_client import ModelClient
 from app.core.observability import current_trace_id, flush, get_langfuse, observe_turn
 from app.core.terminal import Style, paint
+from app.core.token_budget import TokenBudgetExceededError, turn_token_budget
 from app.data.database import connect, reset_database
 from app.data.http import build_http_client
 
@@ -55,16 +56,26 @@ def _run_conversation(connection: sqlite3.Connection) -> bool:
         )
         for message in _MESSAGES:
             print(f"\n{paint('usuário> ', Style.USER_PROMPT)}{message}")
-            with observe_turn(
-                session_id=session_id, user_id=str(_USER_ID), user_message=message
-            ) as span:
-                result = agent.run([*history, user_message(message)])
-                span.update(output=result.text)
-                trace_id = current_trace_id()
+            try:
+                with (
+                    turn_token_budget() as budget,
+                    observe_turn(
+                        session_id=session_id,
+                        user_id=str(_USER_ID),
+                        user_message=message,
+                    ) as span,
+                ):
+                    result = agent.run([*history, user_message(message)])
+                    span.update(output=result.text)
+                    trace_id = current_trace_id()
+            except TokenBudgetExceededError as error:
+                logger.error("Smoke test failed: %s", error)
+                return False
             history = result.messages
             print(f"\n{paint(f'planejador> {result.text}', Style.BOT_REPLY)}")
             agents_called = [execution.name for execution in result.tool_executions]
             print(paint(f"  agentes chamados: {agents_called}", Style.AUXILIARY))
+            print(paint(f"  tokens no turno: {budget.tokens_used}", Style.AUXILIARY))
             if settings.LANGFUSE_TRACING_ENABLED and trace_id:
                 trace_url = get_langfuse().get_trace_url(trace_id=trace_id)
                 print(paint(f"  trace: {trace_url}", Style.AUXILIARY))

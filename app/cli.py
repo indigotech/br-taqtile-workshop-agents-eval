@@ -14,6 +14,7 @@ from app.core.messages import ChatMessage
 from app.core.model_client import ModelClient
 from app.core.observability import current_trace_id, flush, get_langfuse, observe_turn
 from app.core.terminal import Style, paint
+from app.core.token_budget import TokenBudgetExceededError, turn_token_budget
 from app.core.tools import FORCED_DELAY_SECONDS
 from app.data.database import connect, reset_database
 from app.data.http import build_http_client
@@ -72,9 +73,12 @@ def _chat(connection: sqlite3.Connection, http_client: httpx.Client) -> None:
             return
 
         try:
-            with observe_turn(
-                session_id=session_id, user_id=str(user.id), user_message=message
-            ) as span:
+            with (
+                turn_token_budget(),
+                observe_turn(
+                    session_id=session_id, user_id=str(user.id), user_message=message
+                ) as span,
+            ):
                 result = agent.run([*history, user_message(message)])
                 span.update(output=result.text)
                 trace_id = current_trace_id()
@@ -85,12 +89,25 @@ def _chat(connection: sqlite3.Connection, http_client: httpx.Client) -> None:
             notice = f"[erro na API do modelo: {error.message}]"
             print(f"\n{paint(notice, Style.API_ERROR)}\n")
             continue
+        except TokenBudgetExceededError as error:
+            # The partial turn stays out of the history, like an API error.
+            logger.error("Turn stopped by the token budget: %s", error)
+            print(f"\n{paint(_token_budget_notice(error), Style.API_ERROR)}\n")
+            continue
         history = result.messages
 
         print(f"\n{paint(f'planejador> {result.text}', Style.BOT_REPLY)}\n")
         if settings.LANGFUSE_TRACING_ENABLED and trace_id:
             trace_url = get_langfuse().get_trace_url(trace_id=trace_id)
             print(f"{paint(f'  trace: {trace_url}', Style.AUXILIARY)}\n")
+
+
+def _token_budget_notice(error: TokenBudgetExceededError) -> str:
+    return (
+        "[turno interrompido: atingiu o limite de tokens por turno "
+        f"({error.tokens_used} de {error.limit}). A resposta foi descartada; "
+        "comece uma nova conversa ('sair' e `make run` de novo).]"
+    )
 
 
 def _choose_user(user_data_source: UserDataSource) -> User:

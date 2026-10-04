@@ -16,7 +16,7 @@ Color is on only when the target stream is a TTY, decided per stream (stdout for
 
 Thin context managers over the Langfuse v4 SDK (OpenTelemetry based), nested by the call stack:
 
-- `observe_turn` — one **trace per user turn**, grouped by `session_id` into a Langfuse session per conversation (a whole-chat trace would only appear when the chat ends). Optional `tags` mark traces for filtering (the dataset runner tags its runs).
+- `observe_turn` — one **trace per user turn**, grouped by `session_id` into a Langfuse session per conversation (a whole-chat trace would only appear when the chat ends). Optional `tags` mark traces for filtering (the dataset runner tags its runs). A turn that ends in an exception is marked `ERROR` with the reason.
 - `observe_agent` — an `agent` observation per `Agent.run`.
 - `observe_generation` — a `generation` per model call, with model, parameters and token usage. Opened only by `ModelClient`.
 - `observe_tool` — a `tool` observation per tool execution, with input, output and error. Opened only by `ToolRegistry`.
@@ -37,9 +37,18 @@ The conversation travels as `ChatMessage` models in the Chat Completions shape (
 - The SDK client retries rate limits (429) and transient 5xx with exponential backoff (`_MAX_RETRIES`): one orchestrated turn makes a dozen or more calls.
 - `embed(texts)` returns one vector per text with `settings.MODEL_EMBEDDING_MODEL` — the building block for cosine-similarity evals.
 
+## Token budget (`token_budget.py`)
+
+A safety cap that keeps one runaway turn from draining the quota the workshop shares. Each composition root (`cli.py`, `scripts/smoke_test.py`, `evals/runner.py`) enters `turn_token_budget()` next to `observe_turn`; `ModelClient.generate` charges every completion's input + output tokens to it through a context variable, so the nested sub-agent calls count against the same turn without threading a parameter through `Agent`, the loop and `AgentTool`.
+
+- The limit is `settings.MODEL_TOKEN_BUDGET_PER_TURN` (default 85 000, about twice a normal planning turn); 0 disables it. Outside a budget context, nothing is counted.
+- The check runs **before** each call: once the turn has used the budget, the next call is refused with `TokenBudgetExceededError` (limit and tokens used). The call that crossed the line is already paid for, so its reply still counts — if it was the final answer, the turn ends normally.
+- A completion without `usage` counts as zero tokens.
+- The composition roots catch it like an `openai.APIError`: the chat prints a notice and drops the partial turn, the runner records it on the turn and ends that run, the smoke test exits non-zero.
+
 ## Tools (`tools.py`) and the loop (`tool_loop.py`)
 
-A `Tool[InputT, OutputT]` declares `name`, `description`, `input_model` and `output_model`; its function declaration is the input model's JSON schema, so **field descriptions are part of the prompt**. `ToolRegistry.execute` takes the arguments as a dict or as the raw JSON string of a tool call, and never raises — malformed JSON, unknown tools, invalid arguments and exceptions all become an `error` the model reads back.
+A `Tool[InputT, OutputT]` declares `name`, `description`, `input_model` and `output_model`; its function declaration is the input model's JSON schema, so **field descriptions are part of the prompt**. `ToolRegistry.execute` takes the arguments as a dict or as the raw JSON string of a tool call, and never raises — malformed JSON, unknown tools, invalid arguments and exceptions all become an `error` the model reads back. The one exception is `TokenBudgetExceededError`, re-raised so a sub-agent over budget stops the whole turn instead of handing the orchestrator an error to work around.
 
 `settings.FORCE_TOOL_ERROR` names a tool that fails on every call with a timeout, through the same path as a real exception, so a live demo can show an `ERROR` span. Only `make run-case-tool-error` sets it, from the shell environment. `settings.FORCE_SLOW_TOOL` works the same way for latency: that tool takes 5 extra seconds per call, so the slowest span is predictable in a demo; only `make run-case-slow-tool` sets it.
 

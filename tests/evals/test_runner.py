@@ -3,8 +3,10 @@ from datetime import date
 import httpx
 import httpx2
 import openai
+import pytest
 from openai.types.chat import ChatCompletion
 
+from app.core.config import settings
 from app.core.messages import ChatMessage, GenerationConfig
 from app.evals.dataset import EvalCase, ExpectedTrip
 from app.evals.runner import run_case
@@ -127,6 +129,31 @@ class TestRunCase:
 
         assert len(record.turns) == 1
         assert record.turns[0].error == "quota"
+
+    def test_turn_over_the_token_budget_ends_the_run_and_is_recorded(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(settings, "MODEL_TOKEN_BUDGET_PER_TURN", 20)
+        model_client = ScriptedModelClient(
+            [
+                function_call_response(("unknown_tool", {})),
+                function_call_response(("unknown_tool", {})),
+                text_response("nunca enviada"),
+            ]
+        )
+
+        record = run_case(
+            _case(["Paraty dias 3 e 4", "pode reservar"]),
+            run_index=1,
+            model_client=model_client,
+            http_client=_offline_http_client(),
+            today=date(2026, 9, 24),
+        )
+
+        assert [turn.error for turn in record.turns] == [
+            "Token budget exceeded: 30 of 20 tokens used in this turn"
+        ]
+        assert len(model_client.requests) == 2
 
     def test_runs_never_share_reservations(self) -> None:
         def booking_model_client() -> ScriptedModelClient:

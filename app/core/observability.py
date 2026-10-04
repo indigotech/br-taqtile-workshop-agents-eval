@@ -28,7 +28,10 @@ def observe_turn(
 
     A single trace spanning a whole chat would only show its root once the chat
     ends; per-turn traces appear as soon as each answer is ready, and the
-    session view still stitches the conversation back together."""
+    session view still stitches the conversation back together.
+
+    A turn that ends in an exception (a model API error, the token budget) is
+    marked `ERROR` with the reason, so failed turns stand out in the trace list."""
     with (
         get_langfuse().start_as_current_observation(
             name="turn", as_type="span", input=user_message
@@ -37,7 +40,11 @@ def observe_turn(
             session_id=session_id, user_id=user_id, trace_name="turn", tags=tags
         ),
     ):
-        yield span
+        try:
+            yield span
+        except Exception as error:
+            span.update(output=str(error), level="ERROR", status_message=str(error))
+            raise
 
 
 @contextmanager

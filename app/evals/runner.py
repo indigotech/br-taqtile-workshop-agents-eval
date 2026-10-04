@@ -14,6 +14,7 @@ from app.core.agent import Agent, user_message
 from app.core.messages import ChatMessage
 from app.core.model_client import ModelClient
 from app.core.observability import current_trace_id, observe_turn
+from app.core.token_budget import TokenBudgetExceededError, turn_token_budget
 from app.core.tools import ToolExecution
 from app.data.database import connect, reset_database
 from app.data.reservation_data_source import ReservationDataSource
@@ -33,8 +34,8 @@ def run_case(
     """Play every message of the case against the orchestrator, on a freshly
     seeded throwaway database so runs never see each other's reservations.
 
-    A model API error ends the run early and is recorded on its turn instead
-    of aborting the whole dataset."""
+    A model API error or a turn over the token budget ends the run early and is
+    recorded on its turn instead of aborting the whole dataset."""
     started_at = datetime.now(UTC)
     session_id = f"eval-{case.id}-{run_index}-{uuid.uuid4().hex[:8]}"
     with tempfile.TemporaryDirectory() as directory:
@@ -95,18 +96,22 @@ def _play_turn(
         for reservation in reservation_data_source.list_by_user(case.user_id)
     }
     started_at = time.perf_counter()
-    with observe_turn(
-        session_id=session_id,
-        user_id=str(case.user_id),
-        user_message=message,
-        tags=["dataset", case.id],
-    ) as span:
+    with (
+        turn_token_budget(),
+        observe_turn(
+            session_id=session_id,
+            user_id=str(case.user_id),
+            user_message=message,
+            tags=["dataset", case.id],
+        ) as span,
+    ):
         trace_id = current_trace_id()
         try:
             result = agent.run([*history, user_message(message)])
-        except openai.APIError as error:
-            logger.error("Case %s stopped by a model API error: %s", case.id, error)
-            span.update(output=str(error), level="ERROR")
+        except (openai.APIError, TokenBudgetExceededError) as error:
+            reason = error.message if isinstance(error, openai.APIError) else str(error)
+            logger.error("Case %s stopped: %s", case.id, reason)
+            span.update(output=reason, level="ERROR", status_message=reason)
             failed_turn = TurnRecord(
                 user_message=message,
                 response="",
@@ -115,7 +120,7 @@ def _play_turn(
                 trace_id=trace_id,
                 latency_seconds=time.perf_counter() - started_at,
                 stopped_by_iteration_limit=False,
-                error=error.message,
+                error=reason,
             )
             return failed_turn, history
         span.update(output=result.text)

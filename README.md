@@ -65,4 +65,5 @@ Cada execução faz uma dúzia ou mais de chamadas ao Modelo. Enquanto estiver a
 - **Porta 3000 ocupada:** troque `LANGFUSE_PORT` e a porta de `LANGFUSE_BASE_URL` no `.env` (por exemplo, pra 3300) e rode `make run-langfuse` de novo.
 - **`erro na API do modelo: Error code: 401`:** a `MODEL_API_KEY` do `.env` está errada.
 - **`erro na API do modelo: Error code: 429`:** o limite de requisições ou a cota acabou. Espere um minuto ou use outro modelo em `MODEL`.
+- **`turno interrompido: atingiu o limite de tokens por turno`:** um turno passou de `MODEL_TOKEN_BUDGET_PER_TURN` (padrão 85 mil tokens, cerca de 2x um turno normal), em geral um agente em loop. A resposta é descartada pra proteger a cota compartilhada; comece uma nova conversa.
 - **Langfuse não abre logo depois do `make run-langfuse`:** a primeira subida leva de 1 a 2 minutos enquanto os bancos inicializam.

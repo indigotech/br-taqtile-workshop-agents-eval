@@ -12,6 +12,6 @@ Keep the cases tied to the seed: user ids, budgets and catalog cities come from 
 
 ## Runner (`runner.py`, `records.py`)
 
-`run_case` plays one case against the orchestrator on a **freshly seeded throwaway database** (runs never see each other's reservations) and returns a `RunRecord`: per turn, the response, each delegation to a specialist (`AgentCall`), reservations created, trace id, latency, and any model API error (which ends that run instead of the whole dataset). Traces are tagged `dataset` + the case id in Langfuse.
+`run_case` plays one case against the orchestrator on a **freshly seeded throwaway database** (runs never see each other's reservations) and returns a `RunRecord`: per turn, the response, each delegation to a specialist (`AgentCall`), reservations created, trace id, latency, and any model API error or turn over the token budget (either ends that run instead of the whole dataset). Traces are tagged `dataset` + the case id in Langfuse.
 
 `make run-dataset RUNS=3 CASES=id1,id2` runs it against the real API and writes `evals/runs/<timestamp>/results.jsonl` (git-ignored). Each run makes a dozen or more model calls — narrow with `CASES` while iterating.

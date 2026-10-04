@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 from app.core.config import settings
 from app.core.messages import FunctionDeclaration
 from app.core.observability import observe_tool
+from app.core.token_budget import TokenBudgetExceededError
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +61,8 @@ class ToolRegistry:
 
     def execute(self, name: str, arguments: dict[str, Any] | str) -> ToolExecution:
         """Run a tool the model asked for, never raising: any failure becomes an
-        error the model reads back, so it can retry or answer without it.
+        error the model reads back, so it can retry or answer without it. The
+        one exception is `TokenBudgetExceededError`, which ends the turn.
 
         `arguments` may be the raw JSON string of a tool call; malformed JSON is
         one more such failure."""
@@ -109,6 +111,11 @@ class ToolRegistry:
             _delay_if_forced(name)
             _fail_if_forced(name)
             result = tool.run(validated_arguments)
+        except TokenBudgetExceededError:
+            # A sub-agent (AgentTool) runs inside a tool: turned into an error
+            # message, the orchestrator would read it and keep spending. The
+            # budget is the turn's, so it must stop the whole turn.
+            raise
         except Exception as error:
             logger.exception("Tool %s failed", name)
             return None, f"Tool failed: {error}"

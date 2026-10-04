@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Literal
 
-from pydantic import model_validator
+from pydantic import NonNegativeInt, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     # non-default temperature through Chat Completions with reasoning off.
     # Empty leaves the parameter out, for providers that do not know it.
     MODEL_REASONING_EFFORT: str | None = "none"
+    # Safety cap of about twice a normal planning turn (~42k tokens, sub-agents
+    # included), so a runaway loop can't drain the quota the workshop shares.
+    # 0 disables it rather than empty: env_ignore_empty turns an empty value
+    # back into this default.
+    MODEL_TOKEN_BUDGET_PER_TURN: NonNegativeInt = 85_000
 
     # https://no-color.org: any non-empty value turns terminal colors off. Read
     # from the shell environment as well as .env, like every setting.
