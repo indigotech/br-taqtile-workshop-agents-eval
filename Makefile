@@ -47,8 +47,7 @@ run-case-slow-tool: ## Start the chat with one tool taking 5 extra seconds per c
 smoke-test: ## Run a real two-turn conversation (needs MODEL_API_KEY) on a throwaway DB
 	@uv run python -m scripts.smoke_test
 
-# Runs per dataset case (run-dataset) or per check (test-model), and an optional
-# comma-separated case filter for run-dataset
+# Runs per dataset case and an optional comma-separated case filter for run-dataset
 RUNS ?= 1
 CASES ?=
 
@@ -81,12 +80,13 @@ test: ## Run tests (TEST_PATH narrows by path, ARGS forwards flags, e.g. make te
 test-ci: ## Run tests with a compact one-shot summary
 	@$(MAKE) test PYTEST_FLAGS="-q"
 
-# Target-specific, so it doesn't inherit the default of test (tests/); a value
-# passed on the command line still wins.
+# Target-specific, so they don't inherit the defaults of test (tests/) and
+# run-dataset (RUNS=1); values passed on the command line still win.
 test-model: TEST_PATH = evals/unit_tests
+test-model: RUNS = 3
 
 .PHONY: test-model
-test-model: ## Run evals/unit_tests against the real API, costs tokens (RUNS=1, TEST_PATH, ARGS="-s -k ...")
+test-model: ## Run evals/unit_tests against the real API, costs tokens (RUNS=3, TEST_PATH, ARGS="-s -k ...")
 	@RUNS=$(RUNS) uv run pytest $(TEST_PATH) $(PYTEST_FLAGS) $(ARGS)
 
 .PHONY: lint-check

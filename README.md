@@ -68,7 +68,7 @@ Cada execução faz uma dúzia ou mais de chamadas ao Modelo. Enquanto estiver a
 Testes em pytest que chamam o Modelo de verdade (uma regex na resposta de um agente, a validação de uma saída estruturada) ficam em `evals/unit_tests/`, nunca em `tests/`: os testes de `tests/` não chamam o Modelo e são os que rodam no `make test` e no CI. Os de `evals/unit_tests/` usam o seu `.env` e rodam só com:
 
 ```bash
-make test-model                                         # todos, cada checagem rodada uma vez (RUNS=1)
+make test-model                                         # todos, cada checagem repetida 3 vezes (RUNS=3)
 make test-model RUNS=5 TEST_PATH=evals/unit_tests/test_x.py ARGS="-s -k nome"
 ```
 

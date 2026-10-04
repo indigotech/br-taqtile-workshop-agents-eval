@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 load_dotenv(Path(__file__).parents[2] / ".env")
 _SKIP_REASON = missing_model_api_key_reason(os.environ.get("MODEL_API_KEY"))
 
-_DEFAULT_RUNS = 1
+_DEFAULT_RUNS = 3
 
 
 @pytest.fixture
@@ -48,7 +48,7 @@ def model_client() -> "ModelClient":
 
 @pytest.fixture(scope="session")
 def runs() -> int:
-    """How many times a test repeats a stochastic check: RUNS, default 1."""
+    """How many times a test repeats a stochastic check: RUNS, default 3."""
     runs = int(os.environ.get("RUNS") or _DEFAULT_RUNS)
     if runs < 1:
         raise pytest.UsageError(f"RUNS must be at least 1, got {runs}")
