@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-A multi-agent weekend-trip planner ("planejador de rolê") that serves as the starting point of an agent-evaluation workshop. It is a terminal chat in Python that calls Gemini through the `google-genai` SDK directly — **no agent framework** — with a hand-written tool-calling loop, a local SQLite database, and a local Langfuse for traces.
+A multi-agent weekend-trip planner ("planejador de rolê") that serves as the starting point of an agent-evaluation workshop. It is a terminal chat in Python that calls the model through the OpenAI SDK's Chat Completions API directly — **no agent framework** — with a hand-written tool-calling loop, a local SQLite database, and a local Langfuse for traces.
 
 **The agents are meant to be bad.** Later phases plant defects on purpose (prompts, orchestration, parameters) so the workshop's evaluation techniques have something to find. Those defects live in agent *behavior*; the *code* still follows every convention below. Never "fix" an agent's prompt or parameters unless the task asks for it.
 
@@ -17,17 +17,17 @@ make lint-fix                        # auto-fix what ruff can; type errors need 
 
 `test.env` is committed and `tests/conftest.py` loads it (overriding any `.env`) before the app is imported, so testing needs no local configuration and never sends traces anywhere. Each test gets its own seeded SQLite file under `tmp_path`, so running `pytest` directly is safe — it can never touch `data/planner.db`. Use `make test TEST_PATH=tests/core` to narrow by path and `make test ARGS="-k tool_loop"` to narrow by name.
 
-Tests never call the real Gemini API: use `ScriptedGeminiClient` from `tests/helpers.py`, which replays canned responses and records every request.
+Tests never call the real model API: use `ScriptedModelClient` from `tests/helpers.py`, which replays canned responses and records every request.
 
 ## Running Locally
 
 ```bash
-make setup-env                       # creates .env from sample.env; then fill in GEMINI_API_KEY
+make setup-env                       # creates .env from sample.env; then fill in MODEL_API_KEY
 make run-langfuse                    # local Langfuse at http://localhost:3000 (keys are pre-provisioned)
 make run                             # terminal chat; creates and seeds the DB on first run
 make reset-db                        # recreate data/planner.db from schema.sql + seed.sql
-make smoke-test                      # real two-turn conversation on a throwaway DB (needs GEMINI_API_KEY)
-make run-dataset RUNS=3              # play evals/dataset.jsonl N times, saving to evals/runs/ (needs GEMINI_API_KEY)
+make smoke-test                      # real two-turn conversation on a throwaway DB (needs MODEL_API_KEY)
+make run-dataset RUNS=3              # play evals/dataset.jsonl N times, saving to evals/runs/ (needs MODEL_API_KEY)
 ```
 
 Set `LANGFUSE_TRACING_ENABLED=false` in `.env` to run without Langfuse.
@@ -36,7 +36,7 @@ Set `LANGFUSE_TRACING_ENABLED=false` in `.env` to run without Langfuse.
 
 A lean, by-layer take on the Clean Architecture used in Taqtile's AI projects, under `app/`:
 
-- **`core/`** — innermost: config, logging, Langfuse observability, the Gemini client, the tool abstraction and registry, the tool-calling loop, and the `Agent` class every agent is built from.
+- **`core/`** — innermost: config, logging, terminal styling, Langfuse observability, the conversation message models, the model client, the tool abstraction and registry, the tool-calling loop, and the `Agent` class every agent is built from.
 - **`data/`** — the SQLite schema and seed, the connection helpers, row models, one datasource per aggregate, and the clients for external public APIs.
 - **`tools/`** — concrete tools the model can call, each with a Pydantic input and output model.
 - **`agents/`** — concrete agents: their prompts, the tools they get, and their model parameters. An orchestrator agent talks to the user and delegates to the specialists through `AgentTool`.

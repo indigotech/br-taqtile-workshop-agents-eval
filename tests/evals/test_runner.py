@@ -1,12 +1,15 @@
 from datetime import date
 
 import httpx
-from google.genai import errors, types
+import httpx2
+import openai
+from openai.types.chat import ChatCompletion
 
+from app.core.messages import ChatMessage, GenerationConfig
 from app.evals.dataset import EvalCase, ExpectedTrip
 from app.evals.runner import run_case
 from tests.helpers import (
-    ScriptedGeminiClient,
+    ScriptedModelClient,
     function_call_response,
     mock_http_client,
     text_response,
@@ -37,28 +40,22 @@ def _offline_http_client() -> httpx.Client:
     return mock_http_client(lambda request: httpx.Response(500))
 
 
-class FailingGeminiClient(ScriptedGeminiClient):
-    def _generate_content(
-        self,
-        model: str,
-        contents: list[types.Content],
-        config: types.GenerateContentConfig,
-    ) -> types.GenerateContentResponse:
-        raise errors.APIError(
-            429,
-            {
-                "error": {
-                    "code": 429,
-                    "message": "quota",
-                    "status": "RESOURCE_EXHAUSTED",
-                }
-            },
+class FailingModelClient(ScriptedModelClient):
+    def _create_completion(
+        self, model: str, messages: list[ChatMessage], config: GenerationConfig
+    ) -> ChatCompletion:
+        raise openai.RateLimitError(
+            "quota",
+            response=httpx2.Response(
+                429, request=httpx2.Request("POST", "https://api.example.com")
+            ),
+            body=None,
         )
 
 
 class TestRunCase:
     def test_each_turn_records_agent_calls_and_reservations(self) -> None:
-        gemini = ScriptedGeminiClient(
+        model_client = ScriptedModelClient(
             [
                 text_response("Casa Caiçara por R$ 260. Posso reservar?"),
                 function_call_response(
@@ -84,7 +81,7 @@ class TestRunCase:
         record = run_case(
             _case(["Paraty dias 3 e 4", "pode reservar"]),
             run_index=2,
-            gemini=gemini,
+            model_client=model_client,
             http_client=_offline_http_client(),
             today=date(2026, 9, 24),
         )
@@ -123,17 +120,17 @@ class TestRunCase:
         record = run_case(
             _case(["Paraty dias 3 e 4", "pode reservar"]),
             run_index=1,
-            gemini=FailingGeminiClient([]),
+            model_client=FailingModelClient([]),
             http_client=_offline_http_client(),
             today=date(2026, 9, 24),
         )
 
         assert len(record.turns) == 1
-        assert record.turns[0].error == "429 RESOURCE_EXHAUSTED: quota"
+        assert record.turns[0].error == "quota"
 
     def test_runs_never_share_reservations(self) -> None:
-        def booking_gemini() -> ScriptedGeminiClient:
-            return ScriptedGeminiClient(
+        def booking_model_client() -> ScriptedModelClient:
+            return ScriptedModelClient(
                 [
                     function_call_response(
                         ("execute_action", {"instructions": "id 5"})
@@ -159,7 +156,7 @@ class TestRunCase:
             run_case(
                 _case(["reserve"]),
                 run_index=run_index,
-                gemini=booking_gemini(),
+                model_client=booking_model_client(),
                 http_client=_offline_http_client(),
                 today=date(2026, 9, 24),
             )

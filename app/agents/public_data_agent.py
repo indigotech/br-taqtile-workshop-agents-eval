@@ -1,7 +1,7 @@
 import httpx
 
 from app.core.agent import Agent
-from app.core.gemini import GeminiClient
+from app.core.model_client import ModelClient
 from app.data.nager_date_client import NagerDateClient
 from app.data.nominatim_client import NominatimClient
 from app.data.open_meteo_client import OpenMeteoClient
@@ -21,11 +21,13 @@ com datas próximas até conseguir uma previsão.
 """
 
 
-def build_public_data_agent(gemini: GeminiClient, http_client: httpx.Client) -> Agent:
+def build_public_data_agent(
+    model_client: ModelClient, http_client: httpx.Client
+) -> Agent:
     return Agent(
         name="public_data",
         system_prompt=_SYSTEM_PROMPT,
-        gemini=gemini,
+        model_client=model_client,
         tools=[
             GeocodePlaceTool(NominatimClient(http_client)),
             WeatherForecastTool(OpenMeteoClient(http_client)),

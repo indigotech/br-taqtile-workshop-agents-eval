@@ -1,24 +1,28 @@
+import itertools
+import json
 from collections.abc import Callable
 from datetime import UTC, date, datetime
 from typing import Any
 
 import httpx
-from google.genai import types
+from openai.types import CreateEmbeddingResponse
+from openai.types.chat import ChatCompletion
 from pydantic import BaseModel, ConfigDict
 
-from app.core.gemini import GeminiClient
+from app.core.messages import ChatMessage, GenerationConfig
+from app.core.model_client import ModelClient
 from app.core.tools import Tool
 from app.evals.dataset import EvalCase, ExpectedTrip
 from app.evals.records import RunRecord, TurnRecord
 
 
-class ScriptedGeminiClient(GeminiClient):
+class ScriptedModelClient(ModelClient):
     """Replays canned responses in order instead of calling the API, and keeps
     every request so tests can assert on what the model was sent."""
 
     def __init__(
         self,
-        responses: list[types.GenerateContentResponse],
+        responses: list[ChatCompletion],
         embeddings: dict[str, list[float]] | None = None,
     ) -> None:
         super().__init__(model="scripted-model")
@@ -27,27 +31,34 @@ class ScriptedGeminiClient(GeminiClient):
         self.requests: list[ScriptedRequest] = []
         self.embedded_texts: list[str] = []
 
-    def _generate_content(
-        self,
-        model: str,
-        contents: list[types.Content],
-        config: types.GenerateContentConfig,
-    ) -> types.GenerateContentResponse:
+    def _create_completion(
+        self, model: str, messages: list[ChatMessage], config: GenerationConfig
+    ) -> ChatCompletion:
         self.requests.append(
-            ScriptedRequest(model=model, contents=list(contents), config=config)
+            ScriptedRequest(model=model, messages=list(messages), config=config)
         )
         if not self._responses:
-            raise AssertionError("ScriptedGeminiClient ran out of responses")
+            raise AssertionError("ScriptedModelClient ran out of responses")
         return self._responses.pop(0)
 
-    def _embed_content(
+    def _create_embeddings(
         self, model: str, texts: list[str]
-    ) -> types.EmbedContentResponse:
+    ) -> CreateEmbeddingResponse:
         self.embedded_texts.extend(texts)
-        return types.EmbedContentResponse(
-            embeddings=[
-                types.ContentEmbedding(values=self._embeddings[text]) for text in texts
-            ]
+        return CreateEmbeddingResponse.model_validate(
+            {
+                "object": "list",
+                "model": model,
+                "data": [
+                    {
+                        "object": "embedding",
+                        "index": index,
+                        "embedding": self._embeddings[text],
+                    }
+                    for index, text in enumerate(texts)
+                ],
+                "usage": {"prompt_tokens": len(texts), "total_tokens": len(texts)},
+            }
         )
 
 
@@ -55,28 +66,44 @@ class ScriptedRequest(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     model: str
-    contents: list[types.Content]
-    config: types.GenerateContentConfig
+    messages: list[ChatMessage]
+    config: GenerationConfig
 
 
-def text_response(text: str) -> types.GenerateContentResponse:
-    return _response([types.Part.from_text(text=text)])
+def text_response(text: str) -> ChatCompletion:
+    return _completion({"role": "assistant", "content": text})
 
 
-def function_call_response(
-    *calls: tuple[str, dict[str, Any]],
-) -> types.GenerateContentResponse:
-    return _response(
-        [types.Part.from_function_call(name=name, args=args) for name, args in calls]
+def function_call_response(*calls: tuple[str, dict[str, Any]]) -> ChatCompletion:
+    return _completion(
+        {
+            "role": "assistant",
+            "content": None,
+            "tool_calls": [
+                {
+                    "id": f"call_{next(_call_ids)}",
+                    "type": "function",
+                    "function": {"name": name, "arguments": json.dumps(arguments)},
+                }
+                for name, arguments in calls
+            ],
+        }
     )
 
 
-def _response(parts: list[types.Part]) -> types.GenerateContentResponse:
-    return types.GenerateContentResponse(
-        candidates=[types.Candidate(content=types.Content(role="model", parts=parts))],
-        usage_metadata=types.GenerateContentResponseUsageMetadata(
-            prompt_token_count=10, candidates_token_count=5, total_token_count=15
-        ),
+_call_ids = itertools.count(1)
+
+
+def _completion(message: dict[str, Any]) -> ChatCompletion:
+    return ChatCompletion.model_validate(
+        {
+            "id": "completion",
+            "object": "chat.completion",
+            "created": 0,
+            "model": "scripted-model",
+            "choices": [{"index": 0, "finish_reason": "stop", "message": message}],
+            "usage": {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15},
+        }
     )
 
 
@@ -109,28 +136,8 @@ class ExplodingTool(Tool[EchoInput, EchoOutput]):
         raise RuntimeError("boom")
 
 
-def grounded_text_response(
-    text: str, queries: list[str], sources: list[tuple[str, str]]
-) -> types.GenerateContentResponse:
-    response = text_response(text)
-    assert response.candidates is not None
-    response.candidates[0].grounding_metadata = types.GroundingMetadata(
-        web_search_queries=queries,
-        grounding_chunks=[
-            types.GroundingChunk(web=types.GroundingChunkWeb(title=title, uri=uri))
-            for title, uri in sources
-        ],
-    )
-    return response
-
-
-def declared_function_names(config: types.GenerateContentConfig) -> list[str]:
-    return [
-        declaration.name or ""
-        for tool in config.tools or []
-        if isinstance(tool, types.Tool)
-        for declaration in tool.function_declarations or []
-    ]
+def declared_function_names(config: GenerationConfig) -> list[str]:
+    return [declaration.name for declaration in config.tools]
 
 
 def mock_http_client(

@@ -19,7 +19,7 @@ class TestExecute:
             "output": {"echoed": "oioi"},
             "error": None,
         }
-        assert execution.as_function_response() == {"output": {"echoed": "oioi"}}
+        assert execution.as_tool_result() == '{"output": {"echoed": "oioi"}}'
 
     def test_arguments_failing_the_input_model_become_an_error_for_the_model(
         self,
@@ -37,14 +37,33 @@ class TestExecute:
 
         execution = registry.execute("missing", {})
 
-        assert execution.as_function_response() == {"error": "Unknown tool 'missing'"}
+        assert execution.as_tool_result() == '{"error": "Unknown tool \'missing\'"}'
 
     def test_exception_inside_the_tool_becomes_an_error_for_the_model(self) -> None:
         registry = ToolRegistry([ExplodingTool()])
 
         execution = registry.execute("explode", {"message": "oi"})
 
-        assert execution.as_function_response() == {"error": "Tool failed: boom"}
+        assert execution.as_tool_result() == '{"error": "Tool failed: boom"}'
+
+    def test_raw_json_arguments_from_the_model_are_parsed(self) -> None:
+        registry = ToolRegistry([EchoTool()])
+
+        execution = registry.execute("echo", '{"message": "oi", "times": 2}')
+
+        assert (execution.arguments, execution.output) == (
+            {"message": "oi", "times": 2},
+            {"echoed": "oioi"},
+        )
+
+    def test_malformed_json_arguments_become_an_error_for_the_model(self) -> None:
+        registry = ToolRegistry([EchoTool()])
+
+        execution = registry.execute("echo", '{"message": ')
+
+        assert execution.output is None
+        assert execution.error is not None
+        assert execution.error.startswith("Arguments are not valid JSON:")
 
 
 class TestRegistry:
@@ -62,7 +81,7 @@ class TestRegistry:
             {
                 "name": "echo",
                 "description": "Repeats a message",
-                "parameters_json_schema": schema,
+                "parameters": schema,
             }
         ]
 
@@ -89,7 +108,7 @@ class TestDeclaration:
     def test_nested_models_are_inlined_instead_of_referenced(self) -> None:
         declaration = ItineraryTool().declaration()
 
-        assert declaration.parameters_json_schema == {
+        assert declaration.parameters == {
             "properties": {
                 "stops": {
                     "items": {

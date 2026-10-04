@@ -6,7 +6,7 @@ import httpx
 from app.agents.orchestrator_agent import build_orchestrator_agent
 from app.core.agent import user_message
 from tests.helpers import (
-    ScriptedGeminiClient,
+    ScriptedModelClient,
     declared_function_names,
     function_call_response,
     mock_http_client,
@@ -27,9 +27,9 @@ class TestOrchestratorAgent:
     def test_every_specialist_is_available_as_a_tool(
         self, connection: sqlite3.Connection
     ) -> None:
-        gemini = ScriptedGeminiClient([text_response("Pra onde vamos?")])
+        model_client = ScriptedModelClient([text_response("Pra onde vamos?")])
         agent = build_orchestrator_agent(
-            gemini,
+            model_client,
             connection,
             _offline_http_client(),
             user_id=3,
@@ -38,7 +38,7 @@ class TestOrchestratorAgent:
 
         agent.run([user_message("oi")])
 
-        config = gemini.requests[0].config
+        config = model_client.requests[0].config
         assert declared_function_names(config) == [
             "interpret_request",
             "query_database",
@@ -48,12 +48,12 @@ class TestOrchestratorAgent:
             "execute_action",
             "generate_itinerary",
         ]
-        assert "id 3. Hoje é 2026-09-24." in str(config.system_instruction)
+        assert "id 3. Hoje é 2026-09-24." in str(config.system_prompt)
 
     def test_two_turn_conversation_books_and_returns_the_itinerary(
         self, connection: sqlite3.Connection
     ) -> None:
-        gemini = ScriptedGeminiClient(
+        model_client = ScriptedModelClient(
             [
                 # Turn 1 — orchestrator delegates and the specialists answer.
                 function_call_response(
@@ -107,7 +107,7 @@ class TestOrchestratorAgent:
             ]
         )
         agent = build_orchestrator_agent(
-            gemini,
+            model_client,
             connection,
             _offline_http_client(),
             user_id=3,
@@ -115,7 +115,7 @@ class TestOrchestratorAgent:
         )
 
         first_turn = agent.run([user_message("Paraty dias 3 e 4, eu e a Bia")])
-        second_turn = agent.run([*first_turn.contents, user_message("pode reservar")])
+        second_turn = agent.run([*first_turn.messages, user_message("pode reservar")])
 
         assert first_turn.text == "Proposta: Casa Caiçara por R$ 520. Posso reservar?"
         assert second_turn.text == "ROTEIRO PARATY"
@@ -131,4 +131,4 @@ class TestOrchestratorAgent:
             "accommodation_id": 5,
             "total_price": 260.0,
         }
-        assert len(gemini.requests) == 13
+        assert len(model_client.requests) == 13

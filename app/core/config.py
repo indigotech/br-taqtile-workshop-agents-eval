@@ -13,9 +13,20 @@ class Settings(BaseSettings):
     ENVIRONMENT: Literal["test", "local"] = "local"
     LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
-    GEMINI_API_KEY: str
-    GEMINI_MODEL: str = "gemini-2.5-flash"
-    GEMINI_EMBEDDING_MODEL: str = "gemini-embedding-001"
+    MODEL_API_KEY: str
+    MODEL: str = "gpt-6-luna"
+    MODEL_EMBEDDING_MODEL: str = "text-embedding-3-small"
+    # None means OpenAI itself; any other provider with a Chat Completions
+    # compatible endpoint works by pointing this at it.
+    MODEL_BASE_URL: str | None = None
+    # Reasoning models such as gpt-6-luna only accept function tools and a
+    # non-default temperature through Chat Completions with reasoning off.
+    # Empty leaves the parameter out, for providers that do not know it.
+    MODEL_REASONING_EFFORT: str | None = "none"
+
+    # https://no-color.org: any non-empty value turns terminal colors off. Read
+    # from the shell environment as well as .env, like every setting.
+    NO_COLOR: str | None = None
 
     DATABASE_PATH: Path = Path("data/planner.db")
 

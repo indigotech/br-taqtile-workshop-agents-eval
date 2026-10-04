@@ -1,5 +1,5 @@
 from app.core.agent import Agent
-from app.core.gemini import GeminiClient
+from app.core.model_client import ModelClient
 
 _SYSTEM_PROMPT = """\
 Você é o gerador de roteiros de um planejador de rolês de fim de semana.
@@ -11,10 +11,10 @@ inclua tudo o que achar interessante. Quanto mais completo, melhor.
 """
 
 
-def build_output_generator_agent(gemini: GeminiClient) -> Agent:
+def build_output_generator_agent(model_client: ModelClient) -> Agent:
     return Agent(
         name="output_generator",
         system_prompt=_SYSTEM_PROMPT,
-        gemini=gemini,
+        model_client=model_client,
         temperature=1.3,
     )

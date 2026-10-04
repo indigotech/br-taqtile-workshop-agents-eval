@@ -5,17 +5,19 @@ from app.agents.input_interpreter_agent import (
     build_input_interpreter_agent,
 )
 from app.core.agent import user_message
-from tests.helpers import ScriptedGeminiClient, text_response
+from tests.helpers import ScriptedModelClient, text_response
 
 
 class TestInputInterpreterAgent:
     def test_prompt_carries_today_for_relative_dates(self) -> None:
-        gemini = ScriptedGeminiClient([text_response("{}")])
-        agent = build_input_interpreter_agent(gemini, today=date(2026, 9, 24))
+        model_client = ScriptedModelClient([text_response("{}")])
+        agent = build_input_interpreter_agent(model_client, today=date(2026, 9, 24))
 
         agent.run([user_message("quero ir pra Paraty no próximo fim de semana")])
 
-        assert "Hoje é 2026-09-24." in str(gemini.requests[0].config.system_instruction)
+        assert "Hoje é 2026-09-24." in str(
+            model_client.requests[0].config.system_prompt
+        )
 
     def test_well_formed_answer_validates_into_a_trip_request(self) -> None:
         answer = (
@@ -23,8 +25,8 @@ class TestInputInterpreterAgent:
             ' "end_date": "2026-10-04", "guests": 2, "budget_amount": null,'
             ' "preferences": ["frutos do mar"], "missing_information": []}'
         )
-        gemini = ScriptedGeminiClient([text_response(answer)])
-        agent = build_input_interpreter_agent(gemini, today=date(2026, 9, 24))
+        model_client = ScriptedModelClient([text_response(answer)])
+        agent = build_input_interpreter_agent(model_client, today=date(2026, 9, 24))
 
         result = agent.run([user_message("Paraty dias 3 e 4, eu e minha namorada")])
 

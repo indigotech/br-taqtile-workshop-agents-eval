@@ -1,5 +1,5 @@
 from app.core.agent import Agent
-from app.core.gemini import GeminiClient
+from app.core.model_client import ModelClient
 
 _SYSTEM_PROMPT = """\
 Você é o agente de pesquisa de um planejador de rolês de fim de semana.
@@ -10,10 +10,10 @@ preço e horário, para o usuário ter bastante opção.
 """
 
 
-def build_research_agent(gemini: GeminiClient) -> Agent:
+def build_research_agent(model_client: ModelClient) -> Agent:
     return Agent(
         name="research",
         system_prompt=_SYSTEM_PROMPT,
-        gemini=gemini,
+        model_client=model_client,
         temperature=0.9,
     )

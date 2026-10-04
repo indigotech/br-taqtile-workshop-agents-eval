@@ -4,7 +4,7 @@ from app.evals.records import RunRecord
 
 class CompletedWithoutErrorsEvaluator(Evaluator):
     """Example evaluator: every message of the case got a non-empty answer and
-    no Gemini API error interrupted the run."""
+    no model API error interrupted the run."""
 
     name = "completed_without_errors"
 

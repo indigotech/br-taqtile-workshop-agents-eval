@@ -12,7 +12,7 @@ from app.agents.public_data_agent import build_public_data_agent
 from app.agents.research_agent import build_research_agent
 from app.core.agent import Agent
 from app.core.agent_tool import AgentTool
-from app.core.gemini import GeminiClient
+from app.core.model_client import ModelClient
 from app.data.user_data_source import UserDataSource
 
 _SYSTEM_PROMPT = """\
@@ -31,7 +31,7 @@ final com generate_itinerary.
 
 
 def build_orchestrator_agent(
-    gemini: GeminiClient,
+    model_client: ModelClient,
     connection: sqlite3.Connection,
     http_client: httpx.Client,
     user_id: int,
@@ -40,10 +40,10 @@ def build_orchestrator_agent(
     return Agent(
         name="orchestrator",
         system_prompt=_SYSTEM_PROMPT.format(user_id=user_id, today=today.isoformat()),
-        gemini=gemini,
+        model_client=model_client,
         tools=[
             AgentTool(
-                build_input_interpreter_agent(gemini, today),
+                build_input_interpreter_agent(model_client, today),
                 name="interpret_request",
                 description=(
                     "Extrai do pedido do usuário destino, datas, número de "
@@ -51,7 +51,7 @@ def build_orchestrator_agent(
                 ),
             ),
             AgentTool(
-                build_database_agent(gemini, connection, user_id),
+                build_database_agent(model_client, connection, user_id),
                 name="query_database",
                 description=(
                     "Consulta o banco: perfil, orçamento e preferências do "
@@ -59,17 +59,19 @@ def build_orchestrator_agent(
                 ),
             ),
             AgentTool(
-                build_public_data_agent(gemini, http_client),
+                build_public_data_agent(model_client, http_client),
                 name="query_public_data",
                 description="Consulta previsão do tempo e feriados.",
             ),
             AgentTool(
-                build_research_agent(gemini),
+                build_research_agent(model_client),
                 name="search_web",
                 description="Sugere eventos, atrações e restaurantes no destino.",
             ),
             AgentTool(
-                build_budget_analyst_agent(gemini, UserDataSource(connection), user_id),
+                build_budget_analyst_agent(
+                    model_client, UserDataSource(connection), user_id
+                ),
                 name="analyze_budget",
                 description=(
                     "Verifica se a viagem cabe no orçamento do usuário e sugere "
@@ -77,12 +79,12 @@ def build_orchestrator_agent(
                 ),
             ),
             AgentTool(
-                build_action_agent(gemini, connection, user_id),
+                build_action_agent(model_client, connection, user_id),
                 name="execute_action",
                 description="Reserva a hospedagem e registra a decisão.",
             ),
             AgentTool(
-                build_output_generator_agent(gemini),
+                build_output_generator_agent(model_client),
                 name="generate_itinerary",
                 description="Escreve o roteiro final da viagem para o usuário.",
             ),

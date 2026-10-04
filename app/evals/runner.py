@@ -7,11 +7,12 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 
 import httpx
-from google.genai import errors, types
+import openai
 
 from app.agents.orchestrator_agent import build_orchestrator_agent
 from app.core.agent import Agent, user_message
-from app.core.gemini import GeminiClient
+from app.core.messages import ChatMessage
+from app.core.model_client import ModelClient
 from app.core.observability import current_trace_id, observe_turn
 from app.core.tools import ToolExecution
 from app.data.database import connect, reset_database
@@ -25,14 +26,14 @@ logger = logging.getLogger(__name__)
 def run_case(
     case: EvalCase,
     run_index: int,
-    gemini: GeminiClient,
+    model_client: ModelClient,
     http_client: httpx.Client,
     today: date,
 ) -> RunRecord:
     """Play every message of the case against the orchestrator, on a freshly
     seeded throwaway database so runs never see each other's reservations.
 
-    A Gemini API error ends the run early and is recorded on its turn instead
+    A model API error ends the run early and is recorded on its turn instead
     of aborting the whole dataset."""
     started_at = datetime.now(UTC)
     session_id = f"eval-{case.id}-{run_index}-{uuid.uuid4().hex[:8]}"
@@ -42,7 +43,7 @@ def run_case(
         connection = connect(database_path)
         try:
             turns = _play_messages(
-                case, session_id, gemini, http_client, today, connection
+                case, session_id, model_client, http_client, today, connection
             )
         finally:
             connection.close()
@@ -52,7 +53,7 @@ def run_case(
         session_id=session_id,
         run_date=today,
         started_at=started_at,
-        model=gemini.model,
+        model=model_client.model,
         turns=turns,
     )
 
@@ -60,16 +61,16 @@ def run_case(
 def _play_messages(
     case: EvalCase,
     session_id: str,
-    gemini: GeminiClient,
+    model_client: ModelClient,
     http_client: httpx.Client,
     today: date,
     connection: sqlite3.Connection,
 ) -> list[TurnRecord]:
     agent = build_orchestrator_agent(
-        gemini, connection, http_client, case.user_id, today
+        model_client, connection, http_client, case.user_id, today
     )
     reservation_data_source = ReservationDataSource(connection)
-    history: list[types.Content] = []
+    history: list[ChatMessage] = []
     turns: list[TurnRecord] = []
     for message in case.messages:
         turn, history = _play_turn(
@@ -86,9 +87,9 @@ def _play_turn(
     case: EvalCase,
     session_id: str,
     message: str,
-    history: list[types.Content],
+    history: list[ChatMessage],
     reservation_data_source: ReservationDataSource,
-) -> tuple[TurnRecord, list[types.Content]]:
+) -> tuple[TurnRecord, list[ChatMessage]]:
     reservation_ids_before = {
         reservation.id
         for reservation in reservation_data_source.list_by_user(case.user_id)
@@ -103,8 +104,8 @@ def _play_turn(
         trace_id = current_trace_id()
         try:
             result = agent.run([*history, user_message(message)])
-        except errors.APIError as error:
-            logger.error("Case %s stopped by a Gemini API error: %s", case.id, error)
+        except openai.APIError as error:
+            logger.error("Case %s stopped by a model API error: %s", case.id, error)
             span.update(output=str(error), level="ERROR")
             failed_turn = TurnRecord(
                 user_message=message,
@@ -114,7 +115,7 @@ def _play_turn(
                 trace_id=trace_id,
                 latency_seconds=time.perf_counter() - started_at,
                 stopped_by_iteration_limit=False,
-                error=f"{error.code} {error.status}: {error.message}",
+                error=error.message,
             )
             return failed_turn, history
         span.update(output=result.text)
@@ -133,7 +134,7 @@ def _play_turn(
         stopped_by_iteration_limit=result.stopped_by_iteration_limit,
         error=None,
     )
-    return turn, result.contents
+    return turn, result.messages
 
 
 def _agent_call(execution: ToolExecution) -> AgentCall:

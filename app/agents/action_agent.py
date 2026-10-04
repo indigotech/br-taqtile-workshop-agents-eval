@@ -1,7 +1,7 @@
 import sqlite3
 
 from app.core.agent import Agent
-from app.core.gemini import GeminiClient
+from app.core.model_client import ModelClient
 from app.data.accommodation_data_source import AccommodationDataSource
 from app.data.city_data_source import CityDataSource
 from app.data.decision_data_source import DecisionDataSource
@@ -22,13 +22,13 @@ usuário mais satisfeito. Informe o resultado da reserva.
 
 
 def build_action_agent(
-    gemini: GeminiClient, connection: sqlite3.Connection, user_id: int
+    model_client: ModelClient, connection: sqlite3.Connection, user_id: int
 ) -> Agent:
     accommodation_data_source = AccommodationDataSource(connection)
     return Agent(
         name="action",
         system_prompt=_SYSTEM_PROMPT.format(user_id=user_id),
-        gemini=gemini,
+        model_client=model_client,
         tools=[
             SearchAccommodationsTool(
                 CityDataSource(connection), accommodation_data_source

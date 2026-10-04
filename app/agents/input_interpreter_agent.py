@@ -3,7 +3,7 @@ from datetime import date
 from pydantic import BaseModel, Field
 
 from app.core.agent import Agent
-from app.core.gemini import GeminiClient
+from app.core.model_client import ModelClient
 
 
 class TripRequest(BaseModel):
@@ -39,10 +39,10 @@ As datas podem vir como o usuário falou (ex.: "03/10", "sábado que vem" ou
 """
 
 
-def build_input_interpreter_agent(gemini: GeminiClient, today: date) -> Agent:
+def build_input_interpreter_agent(model_client: ModelClient, today: date) -> Agent:
     return Agent(
         name="input_interpreter",
         system_prompt=_SYSTEM_PROMPT.format(today=today.isoformat()),
-        gemini=gemini,
+        model_client=model_client,
         temperature=0.9,
     )

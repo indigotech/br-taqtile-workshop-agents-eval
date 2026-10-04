@@ -4,14 +4,16 @@ import uuid
 from datetime import date
 
 import httpx
-from google.genai import errors, types
+import openai
 
 from app.agents.orchestrator_agent import build_orchestrator_agent
 from app.core.agent import user_message
 from app.core.config import settings
-from app.core.gemini import GeminiClient
 from app.core.logging import setup_logging
+from app.core.messages import ChatMessage
+from app.core.model_client import ModelClient
 from app.core.observability import current_trace_id, flush, get_langfuse, observe_turn
+from app.core.terminal import Style, paint
 from app.data.database import connect, reset_database
 from app.data.http import build_http_client
 from app.data.models import User
@@ -41,15 +43,16 @@ def main() -> None:
 def _chat(connection: sqlite3.Connection, http_client: httpx.Client) -> None:
     user = _choose_user(UserDataSource(connection))
     agent = build_orchestrator_agent(
-        GeminiClient(), connection, http_client, user.id, date.today()
+        ModelClient(), connection, http_client, user.id, date.today()
     )
     session_id = str(uuid.uuid4())
-    history: list[types.Content] = []
+    history: list[ChatMessage] = []
 
-    print(f"\nOlá, {user.name}! Pra onde vamos? (digite 'sair' para encerrar)\n")
+    greeting = f"Olá, {user.name}! Pra onde vamos? (digite 'sair' para encerrar)"
+    print(f"\n{paint(greeting, Style.SYSTEM)}\n")
     while True:
         try:
-            message = input("você> ").strip()
+            message = input(paint("você> ", Style.USER_PROMPT)).strip()
         except (EOFError, KeyboardInterrupt):
             print()
             return
@@ -65,30 +68,34 @@ def _chat(connection: sqlite3.Connection, http_client: httpx.Client) -> None:
                 result = agent.run([*history, user_message(message)])
                 span.update(output=result.text)
                 trace_id = current_trace_id()
-        except errors.APIError as error:
+        except openai.APIError as error:
             # Keeps the chat alive: a bad key or a rate limit should cost one
             # message, not the whole conversation.
-            logger.error("Gemini API error: %s", error)
-            print(f"\n[erro na API do Gemini: {error.code} {error.status}]\n")
+            logger.error("Model API error: %s", error)
+            notice = f"[erro na API do modelo: {error.message}]"
+            print(f"\n{paint(notice, Style.API_ERROR)}\n")
             continue
-        history = result.contents
+        history = result.messages
 
-        print(f"\nplanejador> {result.text}\n")
+        print(f"\n{paint(f'planejador> {result.text}', Style.BOT_REPLY)}\n")
         if settings.LANGFUSE_TRACING_ENABLED and trace_id:
-            print(f"  trace: {get_langfuse().get_trace_url(trace_id=trace_id)}\n")
+            trace_url = get_langfuse().get_trace_url(trace_id=trace_id)
+            print(f"{paint(f'  trace: {trace_url}', Style.AUXILIARY)}\n")
 
 
 def _choose_user(user_data_source: UserDataSource) -> User:
     users = user_data_source.list_users()
-    print("Quem é você?")
+    print(paint("Quem é você?", Style.SYSTEM))
     for user in users:
-        print(f"  {user.id}. {user.name}")
+        print(paint(f"  {user.id}. {user.name}", Style.SYSTEM))
     while True:
-        answer = input(f"id [{users[0].id}]> ").strip() or str(users[0].id)
+        answer = input(
+            paint(f"id [{users[0].id}]> ", Style.USER_PROMPT)
+        ).strip() or str(users[0].id)
         chosen = next((user for user in users if str(user.id) == answer), None)
         if chosen is not None:
             return chosen
-        print("Id inválido, tente de novo.")
+        print(paint("Id inválido, tente de novo.", Style.SYSTEM))
 
 
 if __name__ == "__main__":

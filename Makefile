@@ -23,14 +23,14 @@ list-outdated-dependencies: ## List outdated direct dependencies
 
 .PHONY: setup-env
 setup-env: ## Create .env from sample.env (never overwrites an existing .env)
-	@if [ -f .env ]; then echo ".env already exists, leaving it untouched."; else cp sample.env .env && echo "Created .env — fill in GEMINI_API_KEY."; fi
+	@if [ -f .env ]; then echo ".env already exists, leaving it untouched."; else cp sample.env .env && echo "Created .env — fill in MODEL_API_KEY."; fi
 
 .PHONY: run
 run: ## Start the terminal chat (reads .env)
 	@uv run python -m app.cli
 
 .PHONY: smoke-test
-smoke-test: ## Run a real two-turn conversation (needs GEMINI_API_KEY) on a throwaway DB
+smoke-test: ## Run a real two-turn conversation (needs MODEL_API_KEY) on a throwaway DB
 	@uv run python -m scripts.smoke_test
 
 # Runs per dataset case and an optional comma-separated case filter for run-dataset

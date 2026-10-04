@@ -1,5 +1,5 @@
 from app.core.agent import Agent
-from app.core.gemini import GeminiClient
+from app.core.model_client import ModelClient
 from app.data.user_data_source import UserDataSource
 from app.tools.calculate_budget_tool import CalculateBudgetTool
 from app.tools.user_profile_tool import GetUserProfileTool
@@ -22,12 +22,12 @@ orçamento do usuário:
 
 
 def build_budget_analyst_agent(
-    gemini: GeminiClient, user_data_source: UserDataSource, user_id: int
+    model_client: ModelClient, user_data_source: UserDataSource, user_id: int
 ) -> Agent:
     return Agent(
         name="budget_analyst",
         system_prompt=_SYSTEM_PROMPT.format(user_id=user_id),
-        gemini=gemini,
+        model_client=model_client,
         tools=[
             GetUserProfileTool(user_data_source),
             CalculateBudgetTool(user_data_source),

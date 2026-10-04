@@ -3,7 +3,7 @@ import sqlite3
 from app.agents.action_agent import build_action_agent
 from app.core.agent import user_message
 from tests.helpers import (
-    ScriptedGeminiClient,
+    ScriptedModelClient,
     declared_function_names,
     function_call_response,
     text_response,
@@ -14,13 +14,13 @@ class TestActionAgent:
     def test_prompt_names_the_user_and_action_tools_are_declared(
         self, connection: sqlite3.Connection
     ) -> None:
-        gemini = ScriptedGeminiClient([text_response("ok")])
-        agent = build_action_agent(gemini, connection, user_id=4)
+        model_client = ScriptedModelClient([text_response("ok")])
+        agent = build_action_agent(model_client, connection, user_id=4)
 
         agent.run([user_message("reserve")])
 
-        config = gemini.requests[0].config
-        assert "id 4" in str(config.system_instruction)
+        config = model_client.requests[0].config
+        assert "id 4" in str(config.system_prompt)
         assert declared_function_names(config) == [
             "search_accommodations",
             "create_reservation",
@@ -30,7 +30,7 @@ class TestActionAgent:
     def test_reservation_then_decision_are_written(
         self, connection: sqlite3.Connection
     ) -> None:
-        gemini = ScriptedGeminiClient(
+        model_client = ScriptedModelClient(
             [
                 function_call_response(
                     (
@@ -53,7 +53,7 @@ class TestActionAgent:
                 text_response("Reserva 5 feita."),
             ]
         )
-        agent = build_action_agent(gemini, connection, user_id=4)
+        agent = build_action_agent(model_client, connection, user_id=4)
 
         agent.run([user_message("usuário confirmou a Casa da Ladeira, 10 a 11/10")])
 

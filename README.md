@@ -22,14 +22,14 @@ No Langfuse, cada mensagem vira um trace com os agentes, as chamadas ao Modelo e
 
 - [uv](https://docs.astral.sh/uv/getting-started/installation/). Ele baixa o Python 3.13 sozinho, então não é preciso instalar Python.
 - [Docker](https://docs.docker.com/get-docker/) com Compose, só pro Langfuse. A primeira execução baixa cerca de 1,5 GB de imagens.
-- Uma chave da API do modelo (buscar no provider)
+- Uma chave da API do modelo. O padrão é a OpenAI (<https://platform.openai.com/api-keys>); pra usar outro provider compatível com Chat Completions (DeepSeek, Gemini), ajuste `MODEL_BASE_URL` e `MODEL` no `.env`.
 
 ## Setup
 
 ```bash
 make install        # instala Python e dependências
 make setup-env      # cria o .env a partir do sample.env
-# edite o .env e preencha GEMINI_API_KEY
+# edite o .env e preencha MODEL_API_KEY
 make run-langfuse   # sobe o Langfuse em http://localhost:3000
 make run            # abre o chat no terminal
 ```
@@ -64,6 +64,6 @@ Cada execução faz uma dúzia ou mais de chamadas ao Modelo. Enquanto estiver a
 ## Problemas comuns
 
 - **Porta 3000 ocupada:** troque `LANGFUSE_PORT` e a porta de `LANGFUSE_BASE_URL` no `.env` (por exemplo, pra 3300) e rode `make run-langfuse` de novo.
-- **`erro na API do Modelo: 400 INVALID_ARGUMENT`:** a `MODEL_API_KEY` do `.env` está errada.
-- **`erro na API do MODEL: 429`:** a cota gratuita acabou. Espere um minuto ou use outro modelo em `MODEL`.
+- **`erro na API do modelo: Error code: 401`:** a `MODEL_API_KEY` do `.env` está errada.
+- **`erro na API do modelo: Error code: 429`:** o limite de requisições ou a cota acabou. Espere um minuto ou use outro modelo em `MODEL`.
 - **Langfuse não abre logo depois do `make run-langfuse`:** a primeira subida leva de 1 a 2 minutos enquanto os bancos inicializam.

@@ -1,26 +1,24 @@
-from google.genai import types
-
 from app.core.agent import user_message
+from app.core.messages import GenerationConfig
 from app.core.tool_loop import run_tool_loop
 from app.core.tools import ToolRegistry
 from tests.helpers import (
     EchoTool,
-    ScriptedGeminiClient,
+    ScriptedModelClient,
     function_call_response,
-    grounded_text_response,
     text_response,
 )
 
 
 class TestRunToolLoop:
     def test_plain_text_answer_ends_the_loop_without_tool_calls(self) -> None:
-        gemini = ScriptedGeminiClient([text_response("Olá!")])
+        model_client = ScriptedModelClient([text_response("Olá!")])
 
         result = run_tool_loop(
-            gemini=gemini,
-            contents=[user_message("oi")],
+            model_client=model_client,
+            messages=[user_message("oi")],
             registry=ToolRegistry([EchoTool()]),
-            config=types.GenerateContentConfig(),
+            config=GenerationConfig(),
             max_iterations=5,
         )
 
@@ -31,10 +29,8 @@ class TestRunToolLoop:
         )
         assert result.stopped_by_iteration_limit is False
 
-    def test_function_call_result_is_sent_back_before_the_final_answer(
-        self,
-    ) -> None:
-        gemini = ScriptedGeminiClient(
+    def test_tool_call_result_is_sent_back_before_the_final_answer(self) -> None:
+        model_client = ScriptedModelClient(
             [
                 function_call_response(("echo", {"message": "ab", "times": 2})),
                 text_response("Pronto: abab"),
@@ -42,10 +38,10 @@ class TestRunToolLoop:
         )
 
         result = run_tool_loop(
-            gemini=gemini,
-            contents=[user_message("repete ab duas vezes")],
+            model_client=model_client,
+            messages=[user_message("repete ab duas vezes")],
             registry=ToolRegistry([EchoTool()]),
-            config=types.GenerateContentConfig(),
+            config=GenerationConfig(),
             max_iterations=5,
         )
 
@@ -53,27 +49,24 @@ class TestRunToolLoop:
         assert [execution.output for execution in result.tool_executions] == [
             {"echoed": "abab"}
         ]
-        second_request_last_content = gemini.requests[1].contents[-1]
-        assert second_request_last_content.model_dump(exclude_none=True) == {
-            "role": "user",
-            "parts": [
-                {
-                    "function_response": {
-                        "name": "echo",
-                        "response": {"output": {"echoed": "abab"}},
-                    }
-                }
-            ],
+        tool_call_id = result.messages[1].tool_calls[0].id
+        assert model_client.requests[1].messages[-1].model_dump() == {
+            "role": "tool",
+            "content": '{"output": {"echoed": "abab"}}',
+            "tool_calls": [],
+            "tool_call_id": tool_call_id,
         }
-        assert [content.role for content in result.contents] == [
+        assert [message.role for message in result.messages] == [
             "user",
-            "model",
-            "user",
-            "model",
+            "assistant",
+            "tool",
+            "assistant",
         ]
 
-    def test_parallel_function_calls_are_all_answered_in_one_turn(self) -> None:
-        gemini = ScriptedGeminiClient(
+    def test_parallel_tool_calls_are_each_answered_before_the_next_request(
+        self,
+    ) -> None:
+        model_client = ScriptedModelClient(
             [
                 function_call_response(
                     ("echo", {"message": "a"}), ("echo", {"message": "b"})
@@ -83,10 +76,10 @@ class TestRunToolLoop:
         )
 
         result = run_tool_loop(
-            gemini=gemini,
-            contents=[user_message("oi")],
+            model_client=model_client,
+            messages=[user_message("oi")],
             registry=ToolRegistry([EchoTool()]),
-            config=types.GenerateContentConfig(),
+            config=GenerationConfig(),
             max_iterations=5,
         )
 
@@ -94,98 +87,52 @@ class TestRunToolLoop:
             {"echoed": "a"},
             {"echoed": "b"},
         ]
-        assert len(gemini.requests) == 2
+        assert [message.role for message in model_client.requests[1].messages] == [
+            "user",
+            "assistant",
+            "tool",
+            "tool",
+        ]
 
     def test_model_that_never_stops_calling_tools_is_cut_at_the_limit(self) -> None:
-        gemini = ScriptedGeminiClient(
-            [function_call_response(("echo", {"message": "de novo"}))] * 3
+        model_client = ScriptedModelClient(
+            [function_call_response(("echo", {"message": "de novo"})) for _ in range(3)]
         )
 
         result = run_tool_loop(
-            gemini=gemini,
-            contents=[user_message("oi")],
+            model_client=model_client,
+            messages=[user_message("oi")],
             registry=ToolRegistry([EchoTool()]),
-            config=types.GenerateContentConfig(),
+            config=GenerationConfig(),
             max_iterations=3,
         )
 
         assert (result.iterations, result.stopped_by_iteration_limit) == (3, True)
         assert len(result.tool_executions) == 3
 
-    def test_tools_are_declared_and_automatic_function_calling_is_disabled(
-        self,
-    ) -> None:
-        gemini = ScriptedGeminiClient([text_response("ok")])
+    def test_registry_tools_are_declared_and_the_config_is_kept(self) -> None:
+        model_client = ScriptedModelClient([text_response("ok")])
 
         run_tool_loop(
-            gemini=gemini,
-            contents=[user_message("oi")],
+            model_client=model_client,
+            messages=[user_message("oi")],
             registry=ToolRegistry([EchoTool()]),
-            config=types.GenerateContentConfig(temperature=0.2),
+            config=GenerationConfig(temperature=0.2),
             max_iterations=1,
         )
 
-        config = gemini.requests[0].config
-        assert config.temperature == 0.2
-        assert config.automatic_function_calling == (
-            types.AutomaticFunctionCallingConfig(disable=True)
-        )
-        assert config.tools == [
-            types.Tool(function_declarations=[EchoTool().declaration()])
-        ]
+        config = model_client.requests[0].config
+        assert (config.temperature, config.tools) == (0.2, [EchoTool().declaration()])
 
-
-class TestBuiltinTools:
-    def test_builtin_tools_are_kept_alongside_function_declarations(self) -> None:
-        gemini = ScriptedGeminiClient([text_response("ok")])
-        google_search = types.Tool(google_search=types.GoogleSearch())
+    def test_no_tools_at_all_declares_none(self) -> None:
+        model_client = ScriptedModelClient([text_response("ok")])
 
         run_tool_loop(
-            gemini=gemini,
-            contents=[user_message("oi")],
-            registry=ToolRegistry([EchoTool()]),
-            config=types.GenerateContentConfig(tools=[google_search]),
-            max_iterations=1,
-        )
-
-        assert gemini.requests[0].config.tools == [
-            google_search,
-            types.Tool(function_declarations=[EchoTool().declaration()]),
-        ]
-
-    def test_no_tools_at_all_sends_no_tools_field(self) -> None:
-        gemini = ScriptedGeminiClient([text_response("ok")])
-
-        run_tool_loop(
-            gemini=gemini,
-            contents=[user_message("oi")],
+            model_client=model_client,
+            messages=[user_message("oi")],
             registry=ToolRegistry([]),
-            config=types.GenerateContentConfig(),
+            config=GenerationConfig(),
             max_iterations=1,
         )
 
-        assert gemini.requests[0].config.tools is None
-
-    def test_grounding_queries_and_sources_are_collected(self) -> None:
-        gemini = ScriptedGeminiClient(
-            [
-                grounded_text_response(
-                    "Tem show no sábado.",
-                    queries=["shows paraty setembro"],
-                    sources=[("Agenda Paraty", "https://example.com/agenda")],
-                )
-            ]
-        )
-
-        result = run_tool_loop(
-            gemini=gemini,
-            contents=[user_message("eventos em paraty")],
-            registry=ToolRegistry([]),
-            config=types.GenerateContentConfig(),
-            max_iterations=1,
-        )
-
-        assert result.web_search_queries == ["shows paraty setembro"]
-        assert [source.model_dump() for source in result.sources] == [
-            {"title": "Agenda Paraty", "uri": "https://example.com/agenda"}
-        ]
+        assert model_client.requests[0].config.tools == []

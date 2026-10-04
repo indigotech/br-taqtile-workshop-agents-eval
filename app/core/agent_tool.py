@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field
 
 from app.core.agent import Agent, user_message
-from app.core.tool_loop import WebSource
 from app.core.tools import Tool
 
 
@@ -17,7 +16,6 @@ class AgentToolInput(BaseModel):
 
 class AgentToolOutput(BaseModel):
     response: str
-    sources: list[WebSource]
 
 
 class AgentTool(Tool[AgentToolInput, AgentToolOutput]):
@@ -36,4 +34,4 @@ class AgentTool(Tool[AgentToolInput, AgentToolOutput]):
 
     def run(self, arguments: AgentToolInput) -> AgentToolOutput:
         result = self.agent.run([user_message(arguments.instructions)])
-        return AgentToolOutput(response=result.text, sources=result.sources)
+        return AgentToolOutput(response=result.text)

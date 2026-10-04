@@ -45,7 +45,7 @@ Run once, over both the main dependencies and the `dev` group:
   nested under another package and look current at the top level.
 
   Do not cap the depth. A truncated tree *misses* packages that sit deeper
-  (`pyasn1` sits several levels down, under `google-genai`'s auth stack) and *repeats* the
+  (a package can sit several levels down, under another dependency's own stack) and *repeats* the
   ones it does reach, since uv only collapses a subtree it has already printed
   in full.
 
@@ -107,7 +107,7 @@ While classifying, apply:
   its gate includes `make clean-langfuse && make run-langfuse` plus one real
   `make run` turn showing up as a trace.
 - **Constraint-coupled groups**: a lib plus the packages that depend on it with
-  a narrow range (e.g. `google-genai` capping `pydantic` or `httpx`). Python has
+  a narrow range (e.g. `openai` capping `pydantic`). Python has
   no peer-dependency concept — the constraint
   is a real requirement, so the resolver refuses outright rather than warning:
   a `uv lock` that fails with "no solution found" is this case, and the error
@@ -193,8 +193,8 @@ Add to the gate, on top of CI:
 
 - `uv lock --check` — asserts the lockfile matches `pyproject.toml`.
 - Re-run `uv audit` after bumping, not just before.
-- After a `google-genai` bump, one real `make run` turn with a tool call (needs
-  `GEMINI_API_KEY`): the tests mock the model, so a changed function-calling
+- After an `openai` bump, one real `make run` turn with a tool call (needs
+  `MODEL_API_KEY`): the tests mock the model, so a changed tool-calling
   payload only shows up against the live API.
 
 Because `mypy --strict` runs in the gate, a lib bump can go red purely on
@@ -229,7 +229,7 @@ For each major (or family):
 4. Estimate effort from real impact (files touched, adaptation size).
 5. **Low effort** → update, adapt the code, run the gate. Inspect anything the
    gate touches: a change in the function declarations the tools send to
-   Gemini, or in the span structure Langfuse receives, changes what the workshop
+   the model, or in the span structure Langfuse receives, changes what the workshop
    exercises observe, and is a defer even when the code compiles and the tests
    pass.
 6. **High effort** → defer: add to the report, do not update.
