@@ -15,10 +15,12 @@ def _holiday(day: str, name: str) -> dict[str, object]:
 class TestPublicHolidaysTool:
     def test_only_holidays_inside_the_period_across_years(self) -> None:
         years_requested: list[str] = []
+        countries_requested: list[str] = []
 
         def handler(request: httpx.Request) -> httpx.Response:
             year = request.url.path.split("/")[-2]
             years_requested.append(year)
+            countries_requested.append(request.url.path.split("/")[-1])
             return httpx.Response(
                 200,
                 json=[
@@ -36,7 +38,7 @@ class TestPublicHolidaysTool:
             {
                 "start_date": "2026-12-20",
                 "end_date": "2027-01-02",
-                "country_code": "br",
+                "country_code": "ar",
             },
         )
 
@@ -46,6 +48,27 @@ class TestPublicHolidaysTool:
             "2027-01-01",
         ]
         assert years_requested == ["2026", "2027"]
+        assert countries_requested == ["AR", "AR"]
+
+    def test_missing_country_is_refused_instead_of_assuming_brazil(self) -> None:
+        requested_paths: list[str] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            requested_paths.append(request.url.path)
+            return httpx.Response(200, json=[])
+
+        registry = ToolRegistry(
+            [PublicHolidaysTool(NagerDateClient(mock_http_client(handler)))]
+        )
+
+        execution = registry.execute(
+            "list_public_holidays",
+            {"start_date": "2026-10-10", "end_date": "2026-10-11"},
+        )
+
+        assert execution.error is not None
+        assert execution.error.startswith("Invalid arguments:")
+        assert requested_paths == []
 
 
 class TestWeatherForecastTool:

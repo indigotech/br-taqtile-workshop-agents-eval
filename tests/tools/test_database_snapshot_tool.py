@@ -31,4 +31,4 @@ class TestDatabaseSnapshotTool:
             [len(snapshot["reservations"]) for snapshot in execution.output["users"]],
             len(execution.output["cities"]),
             len(execution.output["accommodations"]),
-        ) == ([1, 2, 3, 4], [2, 0, 1, 1], 8, 15)
+        ) == ([1, 2, 3, 4], [2, 0, 1, 1], 11, 21)

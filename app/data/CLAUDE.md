@@ -6,7 +6,7 @@ All access to SQLite and to external APIs lives here. No agent logic. Imports on
 
 `schema.sql` is the source of truth for the database layout and `seed.sql` its fixture data; `reset_database` deletes the file and replays both. There are no migrations — change the SQL files and run `make reset-db`. Seed data is deliberately varied (dietary restrictions, a user without a car, a user with a dog) so different users exercise different agent paths; keep that property when editing it, and update the counts in `tests/data/test_database.py`.
 
-Money is `REAL` in reais — precision is irrelevant for a trip planner and it keeps tools and prompts free of cents conversions.
+Money is `REAL` in reais — precision is irrelevant for a trip planner and it keeps tools and prompts free of cents conversions. The catalog is not limited to Brazil: `cities.country` is explicit on every row, and accommodations abroad are priced in reais too, already converted, so the catalog and the budget share one currency and no tool needs exchange rates.
 
 ## Connections
 

@@ -10,7 +10,10 @@ class PublicHolidaysInput(BaseModel):
     start_date: date = Field(description="Início do período (AAAA-MM-DD)")
     end_date: date = Field(description="Fim do período (AAAA-MM-DD)")
     country_code: str = Field(
-        default="BR", description="Código ISO do país com duas letras"
+        description=(
+            "Código ISO com duas letras do país do destino, ex.: 'BR', 'AR', "
+            "'PT' (é o country_code devolvido por geocode_place)"
+        )
     )
 
 
@@ -21,8 +24,8 @@ class PublicHolidaysOutput(BaseModel):
 class PublicHolidaysTool(Tool[PublicHolidaysInput, PublicHolidaysOutput]):
     name = "list_public_holidays"
     description = (
-        "Lista os feriados do país (Nager.Date) dentro de um período, útil pra "
-        "saber se o fim de semana é prolongado."
+        "Lista os feriados do país do destino (Nager.Date) dentro de um período, "
+        "útil pra saber se o fim de semana é prolongado."
     )
     input_model = PublicHolidaysInput
     output_model = PublicHolidaysOutput

@@ -65,7 +65,7 @@ def build_orchestrator_agent(
             AgentTool(
                 build_public_data_agent(model_client, http_client),
                 name="query_public_data",
-                description="Consulta previsão do tempo e feriados.",
+                description="Consulta previsão do tempo e feriados do destino.",
             ),
             AgentTool(
                 build_research_agent(model_client),
