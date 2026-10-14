@@ -24,3 +24,7 @@ evals/runs/
 # Claude
 .claude/worktrees/
 CLAUDE.local.md
+
+# promptfoo (make install-judge / eval-judge)
+node_modules/
+.promptfoo/

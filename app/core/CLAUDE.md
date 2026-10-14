@@ -4,7 +4,7 @@ The **innermost layer**: stable primitives every agent reuses. It must never imp
 
 ## Configuration (`config.py`)
 
-`Settings(BaseSettings)` loads from the environment / `.env`. Import the singleton `settings` everywhere — **never read `os.environ` directly elsewhere**. A setting with no default is required and the app fails fast at import without it. Every new setting goes, in the same PR, into `config.py`, `sample.env` (documented) and `test.env`.
+`Settings(BaseSettings)` loads from the environment / `.env`. Import the singleton `settings` everywhere — **never read `os.environ` directly elsewhere**. A setting with no default is required and the app fails fast at import without it. `LOG_LEVEL` is case-insensitive (uppercased on load), since promptfoo shares the variable and needs it lowercase. Every new setting goes, in the same PR, into `config.py`, `sample.env` (documented) and `test.env`.
 
 ## Terminal output (`terminal.py`) and logging (`logging.py`)
 

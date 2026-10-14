@@ -22,6 +22,7 @@ No Langfuse, cada mensagem vira um trace com os agentes, as chamadas ao Modelo e
 
 - [uv](https://docs.astral.sh/uv/getting-started/installation/). Ele baixa o Python 3.13 sozinho, então não é preciso instalar Python.
 - [Docker](https://docs.docker.com/get-docker/) com Compose, só pro Langfuse. A primeira execução baixa cerca de 1,5 GB de imagens.
+- [Node.js](https://nodejs.org/) 22.22 ou mais novo, só pros evals de LLM como juiz (promptfoo). A instalação ocupa cerca de 2,3 GB em `node_modules/`.
 - Uma chave da API do modelo. O padrão é a OpenAI (<https://platform.openai.com/api-keys>); pra usar outro provider compatível com Chat Completions (DeepSeek, Gemini), ajuste `MODEL_BASE_URL` e `MODEL` no `.env`.
 
 ## Setup
@@ -54,6 +55,9 @@ Sem Docker, dá pra rodar sem observabilidade: coloque `LANGFUSE_TRACING_ENABLED
 | `make clean-langfuse` | Remove o Langfuse e todos os traces |
 | `make test` | Roda os testes (sem chamar a API do Modelo) |
 | `make test-model RUNS=3` | Roda os testes de `evals/unit_tests/` chamando o Modelo de verdade (gasta tokens) |
+| `make install-judge` | Instala o promptfoo (precisa de Node) |
+| `make eval-judge ARGS="--repeat 3"` | Roda o eval de LLM como juiz do promptfoo (gasta tokens); `CONFIG=evals/judge/judge_consistency.yaml` roda o de consistência do juiz |
+| `make view-judge` | Abre os resultados do promptfoo no navegador |
 | `make lint-check` / `make lint-fix` | Lint e checagem de tipos / correção automática |
 | `make help` | Lista todos os comandos |
 
@@ -75,6 +79,20 @@ make test-model RUNS=5 TEST_PATH=evals/unit_tests/test_x.py ARGS="-s -k nome"
 Sem uma `MODEL_API_KEY` de verdade no `.env`, a pasta inteira é pulada com o motivo. Os testes recebem as fixtures `connection` (um banco SQLite novo e populado por teste, nunca o `data/planner.db`), `model_client` (um `ModelClient()` real) e `runs` (o valor de `RUNS`). Cada teste vira um trace no Langfuse com a tag `unit-test`, se o tracing estiver ligado no `.env`.
 
 Cada execução gasta tokens e a resposta do Modelo muda de uma vez pra outra: repita a checagem `runs` vezes e compare a taxa de acerto com um limite, em vez de depender de uma única resposta.
+
+### LLM como juiz (promptfoo)
+
+Quando a resposta é texto aberto e a qualidade depende do pedido (sugestões que respeitam as preferências do usuário, por exemplo), regex e similaridade não bastam: um segundo modelo, o juiz, dá a nota seguindo uma rubrica. Os evals ficam em `evals/judge/` e rodam com o [promptfoo](https://www.promptfoo.dev/):
+
+```bash
+make install-judge                                              # uma vez, instala o promptfoo
+make eval-judge                                                 # agente de pesquisa avaliado pelo juiz
+make eval-judge ARGS="--repeat 3"                               # 3 vezes: pass^3 só passa se as 3 passarem
+make eval-judge CONFIG=evals/judge/judge_consistency.yaml       # respostas fixas, só o juiz muda
+make view-judge                                                 # abre os resultados no navegador
+```
+
+O juiz é o mesmo modelo dos agentes, com a chave `MODEL_API_KEY` do `.env`. Cada asserção `llm-rubric` dá uma nota de 0 a 1, e o `threshold` dela é o critério de aprovação. Quando algum teste falha, o `make eval-judge` termina com erro, como o pytest. Os resultados ficam em `.promptfoo/`, dentro do repositório, e nada é enviado pra fora além das chamadas ao Modelo (a telemetria do promptfoo fica desligada).
 
 ## Problemas comuns
 

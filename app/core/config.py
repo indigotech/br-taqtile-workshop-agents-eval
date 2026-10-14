@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Literal
 
-from pydantic import NonNegativeInt, model_validator
+from pydantic import NonNegativeInt, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -51,6 +51,13 @@ class Settings(BaseSettings):
     LANGFUSE_BASE_URL: str = "http://localhost:3000"
     LANGFUSE_PUBLIC_KEY: str | None = None
     LANGFUSE_SECRET_KEY: str | None = None
+
+    @field_validator("LOG_LEVEL", mode="before")
+    @classmethod
+    def _uppercase_log_level(cls, value: object) -> object:
+        # promptfoo reads the same LOG_LEVEL and only knows lowercase names, so
+        # `make eval-judge` passes `info` to it and to the app it runs.
+        return value.upper() if isinstance(value, str) else value
 
     @model_validator(mode="after")
     def _require_langfuse_keys_when_tracing(self) -> "Settings":

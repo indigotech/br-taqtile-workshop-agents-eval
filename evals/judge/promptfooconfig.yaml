@@ -1,0 +1,52 @@
+# Base da atividade: um LLM juiz dá nota para a resposta do agente de pesquisa
+# seguindo uma rubrica. Copie a asserção para cada nova rubrica. Os espaços das
+# atividades estão marcados abaixo do teste.
+#
+# make eval-judge                     roda uma vez
+# make eval-judge ARGS="--repeat 3"   roda 3 vezes: pass^3 só passa se as 3 passarem
+# make view-judge                     abre os resultados no navegador
+description: Agente de pesquisa avaliado por um LLM juiz
+
+prompts:
+  - "{{pedido}}"
+
+providers:
+  - id: file://research_agent_provider.py
+    label: agente de pesquisa
+
+defaultTest:
+  options:
+    provider:
+      # O mesmo modelo dos agentes (MODEL no .env). O promptfoo não reconhece o
+      # gpt-6-luna como modelo de raciocínio e não manda reasoning_effort sozinho,
+      # então ele vai no passthrough, como o ModelClient faz. omitDefaults tira o
+      # max_tokens, que o gpt-6-luna recusa.
+      id: openai:chat:gpt-6-luna
+      config:
+        apiKeyEnvar: MODEL_API_KEY
+        omitDefaults: true
+        temperature: 0
+        passthrough:
+          reasoning_effort: none
+
+tests:
+  - description: Paraty para um casal vegetariano que adora museus
+    vars:
+      pedido: >-
+        Sugira restaurantes, eventos e atrações em Paraty (RJ) para um casal no
+        próximo fim de semana. Sou vegetariana e a gente adora museus.
+    assert:
+      - type: llm-rubric
+        value: Todos os restaurantes sugeridos servem opções vegetarianas.
+        # Critério de aprovação: o juiz dá uma nota de 0 a 1, e o teste só passa
+        # com nota maior ou igual a esta.
+        threshold: 0.8
+
+      # Leva 1 — escrevendo rubricas
+
+      # Atividade 1: a resposta inclui pelo menos um museu (rubrica nova).
+
+      # Atividade 2: escreva uma rubrica com nota de 1 a 5 e exemplos do que vale
+      # cada nota, e defina o threshold (critério de aprovação).
+
+# Leva 2 — dá pra confiar no juiz? Fica em judge_consistency.yaml.

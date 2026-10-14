@@ -1,0 +1,11 @@
+{
+  "name": "br-taqtile-workshop-agents-eval",
+  "private": true,
+  "description": "promptfoo para os evals de LLM como juiz (make install-judge)",
+  "engines": {
+    "node": ">=22.22.0"
+  },
+  "devDependencies": {
+    "promptfoo": "0.123.1"
+  }
+}

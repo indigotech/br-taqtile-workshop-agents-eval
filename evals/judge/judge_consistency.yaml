@@ -1,0 +1,89 @@
+# Base da leva 2: as respostas são fixas, escritas à mão, então só o juiz muda de
+# uma execução para outra. O provider echo devolve o prompt como resposta, sem
+# chamar o modelo; quem gasta tokens aqui é só o juiz.
+#
+# make eval-judge CONFIG=evals/judge/judge_consistency.yaml ARGS="--repeat 5"
+description: Dá pra confiar no juiz?
+
+prompts:
+  - "{{resposta}}"
+
+providers:
+  - id: echo
+    label: respostas fixas
+
+defaultTest:
+  options:
+    provider:
+      id: openai:chat:gpt-6-luna
+      config:
+        apiKeyEnvar: MODEL_API_KEY
+        omitDefaults: true
+        temperature: 0
+        passthrough:
+          reasoning_effort: none
+  assert:
+    - type: llm-rubric
+      value: Todos os restaurantes sugeridos servem opções vegetarianas.
+      threshold: 0.8
+
+# Atividade 3: consistência. Rode com ARGS="--repeat 5" e veja se o veredito do
+# juiz muda para a mesma resposta (o juiz também tem pass^k).
+
+# Atividade 4: concordância com humanos. Preencha veredito_humano (passa / não
+# passa) em cada resposta e compare com o juiz no make view-judge: quantos batem?
+
+tests:
+  - description: Resposta A
+    vars:
+      veredito_humano: ""
+      resposta: |
+        Restaurantes em Paraty:
+        1. Banana da Terra (Rua Dr. Samuel Costa, 198), R$ 120–200 por pessoa, 12h às 23h. Cozinha caiçara com moqueca de banana-da-terra e palmito, prato vegetariano da casa.
+        2. Thai Brasil (Rua do Comércio, 308), R$ 80–150, 18h às 23h. Curry de legumes e pad thai com tofu.
+        3. Quintal das Letras (Rua do Comércio, 13), R$ 100–180, 19h às 23h. Menu com entradas e principais vegetarianos.
+        Eventos: Festa Literária (FLIP) com mesas na Casa da Cultura, sábado às 10h; roda de choro na Praça da Matriz, sábado às 20h.
+        Atrações: Casa da Cultura de Paraty, Forte Defensor Perpétuo e passeio de escuna pela baía.
+
+  - description: Resposta B
+    vars:
+      veredito_humano: ""
+      resposta: |
+        Restaurantes em Paraty:
+        1. Churrascaria Gaúcha do Porto (Av. Roberto Silveira, 450), R$ 90–140, 11h às 23h. Rodízio completo de carnes nobres.
+        2. Thai Brasil (Rua do Comércio, 308), R$ 80–150, 18h às 23h. Curry de legumes e pad thai com tofu.
+        3. Punto Divino (Rua Marechal Deodoro, 129), R$ 70–130, 18h às 0h. Pizzas de forno a lenha, várias sem carne.
+        Eventos: roda de choro na Praça da Matriz, sábado às 20h.
+        Atrações: Casa da Cultura de Paraty e Forte Defensor Perpétuo.
+
+  - description: Resposta C
+    vars:
+      veredito_humano: ""
+      resposta: |
+        Restaurantes em Paraty:
+        1. Casa do Fogo (Rua do Comércio, 58), R$ 130–220, 18h às 23h. Frutos do mar flambados na cachaça.
+        2. Refúgio (Praça do Porto, 1), R$ 120–200, 12h às 23h. Peixe do dia e camarão na moranga, de frente para o cais.
+        3. Margarida Café (Praça do Chafariz), R$ 60–120, 12h às 0h. Bistrô com música ao vivo.
+        Eventos: show de MPB no Margarida Café, sábado às 21h.
+        Atrações: passeio de escuna pela baía e Cachoeira do Tobogã.
+
+  - description: Resposta D
+    vars:
+      veredito_humano: ""
+      resposta: |
+        Restaurantes em Paraty:
+        1. Banana da Terra (Rua Dr. Samuel Costa, 198), R$ 120–200, 12h às 23h. Moqueca de banana-da-terra e palmito.
+        2. Thai Brasil (Rua do Comércio, 308), R$ 80–150, 18h às 23h. Curry de legumes e pad thai com tofu.
+        Eventos: luau na Praia do Jabaquara, sábado às 19h.
+        Atrações: Trindade e a piscina natural do Cachadaço, passeio de escuna e Cachoeira do Tobogã.
+
+  - description: Resposta E
+    vars:
+      veredito_humano: ""
+      resposta: |
+        Restaurantes em Paraty (confirme o cardápio antes de ir):
+        1. Thai Brasil (Rua do Comércio, 308), R$ 80–150, 18h às 23h. Costuma ter opções sem carne, como curry de legumes.
+        2. Banana da Terra (Rua Dr. Samuel Costa, 198), R$ 120–200, 12h às 23h. Cozinha caiçara; pergunte se há prato vegetariano no dia.
+        3. Refúgio (Praça do Porto, 1), R$ 120–200, 12h às 23h. Peixes e frutos do mar de frente para o cais; dá pra pedir adaptações.
+        Eventos: roda de choro na Praça da Matriz, sábado às 20h.
+        Atrações: Casa da Cultura de Paraty e Museu de Arte Sacra.

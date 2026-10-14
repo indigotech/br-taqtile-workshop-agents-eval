@@ -27,3 +27,13 @@ pytest tests that call the **real model** — the workshop's checks on an agent'
 - `make test-model` runs them (`RUNS=5`, `TEST_PATH=evals/unit_tests/test_x.py`, `ARGS="-s -k name"`).
 
 Every test costs tokens and its result varies from run to run: repeat a stochastic check `runs` times and assert a pass rate against a threshold rather than a single outcome, and narrow with `TEST_PATH` / `-k` while iterating.
+
+## LLM-as-a-judge evals (`evals/judge/`)
+
+Open-ended answers whose quality depends on the request (does the research agent respect the user's preferences?) are graded by a second model with a rubric, through [promptfoo](https://www.promptfoo.dev/), a Node CLI pinned in the root `package.json` (`make install-judge`, separate from `make install` so CI and the Python setup never need Node).
+
+- `promptfooconfig.yaml` runs the research agent through `research_agent_provider.py`, a promptfoo Python provider (`call_api`) that builds the agent with a real `ModelClient()`. It is a composition root like the runner: one Langfuse trace tagged `llm-judge` per call, its own prompt cache key and token budget, flushed before returning since promptfoo may end the worker right after.
+- `judge_consistency.yaml` grades hand-written fixed responses through promptfoo's `echo` provider, so only the judge varies — the base for checking the judge's own consistency and agreement with human labels.
+- The grader is `openai:chat:gpt-6-luna` with `apiKeyEnvar: MODEL_API_KEY`. promptfoo doesn't know gpt-6-luna is a reasoning model, so `reasoning_effort: none` goes through `passthrough`, and `omitDefaults` drops the `max_tokens` it would send otherwise (the model only accepts `max_completion_tokens`). The model name is fixed in the YAML: changing `MODEL` or `MODEL_BASE_URL` in `.env` does not move the judge.
+- `make eval-judge` (`CONFIG=…`, `ARGS="--repeat 3"`) runs from the repo root, so promptfoo and the app both read `.env`; it sets `PROMPTFOO_PYTHON` to the repo's `.venv` and `PYTHONPATH` to the root so `app` imports, disables promptfoo's telemetry and update check, passes `--no-cache` (a cached answer would hide the variation the workshop measures), and keeps promptfoo's results database in `.promptfoo/` (git-ignored). `make view-judge` opens it.
+- promptfoo reads `LOG_LEVEL` too and prints nothing when it is uppercase, so the make targets pass `info`; the app's `Settings` uppercases `LOG_LEVEL`, so the provider still builds.

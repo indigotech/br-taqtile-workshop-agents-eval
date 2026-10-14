@@ -29,6 +29,8 @@ make reset-db                        # recreate data/planner.db from schema.sql 
 make smoke-test                      # real two-turn conversation on a throwaway DB (needs MODEL_API_KEY)
 make run-dataset RUNS=3              # play evals/dataset.jsonl N times, saving to evals/runs/ (needs MODEL_API_KEY)
 make test-model RUNS=3               # pytest on evals/unit_tests against the real model; skipped without MODEL_API_KEY
+make install-judge                   # once, installs promptfoo (Node 22.22+) for the LLM-as-a-judge evals
+make eval-judge ARGS="--repeat 3"    # promptfoo eval in evals/judge/ (CONFIG=… picks another); make view-judge opens the results
 ```
 
 Set `LANGFUSE_TRACING_ENABLED=false` in `.env` to run without Langfuse.
@@ -41,7 +43,7 @@ A lean, by-layer take on the Clean Architecture used in Taqtile's AI projects, u
 - **`data/`** — the SQLite schema and seed, the connection helpers, row models, one datasource per aggregate, and the clients for external public APIs.
 - **`tools/`** — concrete tools the model can call, each with a Pydantic input and output model.
 - **`agents/`** — concrete agents: their prompts, the tools they get, and their model parameters. An orchestrator agent talks to the user and delegates to the specialists through `AgentTool`.
-- **`evals/`** — the evaluation harness: the dataset and the runner that produces the `RunRecord`s the workshop's evaluators are built on. Its real-model pytest tests live outside `app/`, in `evals/unit_tests/`.
+- **`evals/`** — the evaluation harness: the dataset and the runner that produces the `RunRecord`s the workshop's evaluators are built on. Its real-model pytest tests live outside `app/`, in `evals/unit_tests/`, and its promptfoo LLM-as-a-judge evals in `evals/judge/`.
 - **`cli.py`** — the terminal entrypoint.
 
 Each layer has its own `CLAUDE.md` with detailed conventions — read it before working in that layer.

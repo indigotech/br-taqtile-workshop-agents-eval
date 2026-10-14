@@ -55,6 +55,29 @@ CASES ?=
 run-dataset: ## Run the eval dataset against the real API (RUNS=3 CASES=id1,id2), saving to evals/runs/
 	@uv run python -m scripts.run_dataset --runs $(RUNS) $(if $(CASES),--cases $(CASES),)
 
+# promptfoo's optional dependencies include Playwright, whose install script
+# downloads Chromium for minutes; the judge evals never open a browser. The
+# optional dependencies themselves stay: its SQLite binding is one of them.
+.PHONY: install-judge
+install-judge: ## Install promptfoo (needs Node 22.22+) for the LLM-as-a-judge evals
+	@PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci
+
+# promptfoo config that eval-judge runs — override for the judge consistency check
+CONFIG ?= evals/judge/promptfooconfig.yaml
+
+# No telemetry or update checks leave the machine, and promptfoo's results
+# database stays in this checkout instead of ~/.promptfoo. promptfoo reads
+# LOG_LEVEL too, but silently prints nothing with the uppercase value from .env.
+PROMPTFOO = LOG_LEVEL=info NODE_NO_WARNINGS=1 PROMPTFOO_DISABLE_TELEMETRY=1 PROMPTFOO_DISABLE_UPDATE=1 PROMPTFOO_CONFIG_DIR=$(CURDIR)/.promptfoo npx --no-install promptfoo
+
+.PHONY: eval-judge
+eval-judge: ## Run a promptfoo LLM-as-a-judge eval, costs tokens (CONFIG=evals/judge/x.yaml, ARGS="--repeat 3")
+	@PROMPTFOO_PYTHON=$(CURDIR)/.venv/bin/python PYTHONPATH=$(CURDIR) $(PROMPTFOO) eval --config $(CONFIG) --no-cache $(ARGS)
+
+.PHONY: view-judge
+view-judge: ## Open the promptfoo results UI for the judge evals
+	@$(PROMPTFOO) view --yes
+
 .PHONY: reset-db
 reset-db: ## Recreate the local SQLite database from the schema and seed it
 	@uv run python -m scripts.reset_database
