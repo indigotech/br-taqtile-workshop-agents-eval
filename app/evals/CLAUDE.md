@@ -32,7 +32,7 @@ Every test costs tokens and its result varies from run to run: repeat a stochast
 
 ## LLM-as-a-judge evals (`evals/judge/`)
 
-Open-ended answers whose quality depends on the request (does the research agent respect the user's preferences?) are graded by a second model with a rubric, through [promptfoo](https://www.promptfoo.dev/), a Node CLI pinned in the root `package.json` (`make install-judge`, separate from `make install` so CI and the Python setup never need Node).
+Open-ended answers whose quality depends on the request (does the research agent respect the user's preferences?) are graded by a second model with a rubric, through [promptfoo](https://www.promptfoo.dev/), a Node CLI pinned in the root `package.json` (`make install-judge`, separate from `make install` so CI and the Python setup never need Node). `make install-judge PROMPTFOO_VERSION=0.120.19` installs that release instead with `npm install --no-save`, for machines stuck on Node 20.19 (`scripts/setup_workshop_node20.ps1`); the pinned version needs Node 22.22+. Both configs here must keep working on 0.120.19.
 
 - `promptfooconfig.yaml` runs the research agent through `research_agent_provider.py`, a promptfoo Python provider (`call_api`) that builds the agent with a real `ModelClient()`. It is a composition root like the runner: one Langfuse trace tagged `llm-judge` per call, its own prompt cache key and token budget, flushed before returning since promptfoo may end the worker right after.
 - `judge_consistency.yaml` grades hand-written fixed responses through promptfoo's `echo` provider, so only the judge varies — the base for checking the judge's own consistency and agreement with human labels.

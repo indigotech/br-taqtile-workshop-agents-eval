@@ -37,6 +37,14 @@ irm https://raw.githubusercontent.com/indigotech/br-taqtile-workshop-agents-eval
 
 O `scripts/setup_workshop.ps1` instala pelo `winget` o Git, o uv, o Node.js 22 e o GNU Make (o Windows pode pedir permissão de administrador), põe a pasta `bin` do Git no PATH, porque o `make` roda as receitas no `sh` que vem com o Git, e clona em `%USERPROFILE%\br-taqtile-workshop-agents-eval`. Sem o `winget`, instale o [App Installer](https://apps.microsoft.com/detail/9NBLGGH4NNS1) antes. Depois, abra um PowerShell novo para o PATH valer e use os comandos `make` normalmente.
 
+Se a máquina precisa ficar no **Node.js 20** (20.19 ou mais novo) e não pode ter o 22, use a variante `scripts/setup_workshop_node20.ps1`:
+
+```powershell
+irm https://raw.githubusercontent.com/indigotech/br-taqtile-workshop-agents-eval/main/scripts/setup_workshop_node20.ps1 | iex
+```
+
+Ela não instala o Node 22: usa o Node que já existe (e interrompe a instalação se ele for mais antigo que o 20.19) ou, sem Node, instala o 20 pelo `winget`. No lugar do promptfoo fixado no `package.json`, instala o 0.120.19, o último que roda no Node 20.19. O custo: um promptfoo mais antigo que o do resto da turma, e o Node 20, que já saiu de suporte (EOL em abril de 2026). Nessa máquina, reinstale sempre com `make install-judge PROMPTFOO_VERSION=0.120.19`.
+
 **macOS** (Intel ou Apple Silicon), **Linux** (Ubuntu/Debian) ou **WSL2**:
 
 ```bash
@@ -81,7 +89,7 @@ A cada resposta, o chat imprime o link do trace. Com alguma das chaves vazia, o 
 | `make reset-db` | Recria o banco `data/planner.db` com os dados de exemplo |
 | `make test` | Roda os testes (sem chamar a API do Modelo) |
 | `make test-model RUNS=3` | Roda os testes de `evals/unit_tests/` chamando o Modelo de verdade (gasta tokens) |
-| `make install-judge` | Instala o promptfoo (precisa de Node) |
+| `make install-judge` | Instala o promptfoo (precisa de Node 22.22+; `PROMPTFOO_VERSION=0.120.19` para o Node 20.19) |
 | `make eval-judge ARGS="--repeat 3"` | Roda o eval de LLM como juiz do promptfoo (gasta tokens); `CONFIG=evals/judge/judge_consistency.yaml` roda o de consistência do juiz |
 | `make view-judge` | Abre os resultados do promptfoo no navegador |
 | `make lint-check` / `make lint-fix` | Lint e checagem de tipos / correção automática |

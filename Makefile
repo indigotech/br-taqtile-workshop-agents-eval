@@ -69,9 +69,16 @@ run-dataset: ## Run the eval dataset against the real API (RUNS=3 CASES=id1,id2)
 # promptfoo's optional dependencies include Playwright, whose install script
 # downloads Chromium for minutes; the judge evals never open a browser. The
 # optional dependencies themselves stay: its SQLite binding is one of them.
+#
+# PROMPTFOO_VERSION swaps the pinned promptfoo for another release, for machines
+# stuck on Node 20.19 (scripts/setup_workshop_node20.ps1 passes 0.120.19, the
+# last one that runs there). --no-save leaves package.json and the lockfile
+# untouched, so a later git pull never conflicts.
+PROMPTFOO_VERSION ?=
+
 .PHONY: install-judge
-install-judge: ## Install promptfoo (needs Node 22.22+) for the LLM-as-a-judge evals
-	@PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci
+install-judge: ## Install promptfoo (needs Node 22.22+; PROMPTFOO_VERSION=0.120.19 for Node 20.19)
+	@PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 $(if $(PROMPTFOO_VERSION),npm install --no-save promptfoo@$(PROMPTFOO_VERSION),npm ci)
 
 # promptfoo config that eval-judge runs — override for the judge consistency check
 CONFIG ?= evals/judge/promptfooconfig.yaml

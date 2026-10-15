@@ -108,7 +108,7 @@ function Install-WingetPackage([string]$PackageId, [string]$Name) {
     Write-Host "Instalando $Name pelo winget ($PackageId)"
     winget install --id $PackageId --exact --source winget --silent --accept-package-agreements --accept-source-agreements
     if ($LASTEXITCODE -ne 0) {
-        Stop-Setup "O winget nao conseguiu instalar $Name ($PackageId, codigo $LASTEXITCODE)."
+        Stop-Setup "O winget nao conseguiu instalar $Name ($PackageId, codigo $LASTEXITCODE). Instale na mao: abra um NOVO PowerShell, rode 'winget install --id $PackageId -e' e depois rode este comando de novo."
     }
     Update-SessionPath
 }
@@ -278,7 +278,7 @@ function Write-Checklist([string]$RepositoryDirectory) {
         Write-Host "  $item. Cole a public key em LANGFUSE_PUBLIC_KEY e a secret key em LANGFUSE_SECRET_KEY no .env (a secret so aparece uma vez)"
         $item++
     }
-    Write-Host "  $item. Abra um PowerShell novo (pro PATH novo valer) e rode:"
+    Write-Host "  $item. Feche este PowerShell e abra um NOVO antes de usar o make (so assim o PATH novo vale). Nele, rode:"
     Write-Host "       cd $RepositoryDirectory"
     Write-Host '       make run'
 }
