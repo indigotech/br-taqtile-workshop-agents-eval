@@ -46,7 +46,8 @@ tests:
 
       # Atividade 1: a resposta inclui pelo menos um museu (rubrica nova).
 
-      # Atividade 2: escreva uma rubrica com nota de 1 a 5 e exemplos do que vale
-      # cada nota, e defina o threshold (critério de aprovação).
+      # Atividade 2: escreva uma rubrica com 5 faixas de nota na escala de 0 a 1
+      # do juiz (0; 0,25; 0,5; 0,75; 1), com um exemplo do que vale cada faixa.
+      # Qual threshold vira o critério de aprovação?
 
 # Leva 2 — dá pra confiar no juiz? Fica em judge_consistency.yaml.
