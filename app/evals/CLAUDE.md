@@ -28,6 +28,8 @@ pytest tests that call the **real model** — the workshop's checks on an agent'
 
 Every test costs tokens and its result varies from run to run: repeat a stochastic check `runs` times and assert a pass rate against a threshold rather than a single outcome, and narrow with `TEST_PATH` / `-k` while iterating.
 
+`pass_metrics.py` has the estimators those repeated runs report: `pass_at_k(n, c, k)` (Chen et al. 2021, at least one of `k` runs passes) and `pass_hat_k(n, c, k)` (Yao et al. 2024, τ-bench, all `k` pass), for `c` passing runs out of `n`. Each base test in `evals/unit_tests/` keeps its own pass criterion and puts pass@1 and pass^n in its failure message; the estimators are unit-tested in `tests/evals/`.
+
 ## LLM-as-a-judge evals (`evals/judge/`)
 
 Open-ended answers whose quality depends on the request (does the research agent respect the user's preferences?) are graded by a second model with a rubric, through [promptfoo](https://www.promptfoo.dev/), a Node CLI pinned in the root `package.json` (`make install-judge`, separate from `make install` so CI and the Python setup never need Node).

@@ -9,6 +9,7 @@ import pytest
 from app.agents.output_generator_agent import build_output_generator_agent
 from app.core.agent import user_message
 from app.core.model_client import ModelClient
+from app.evals.pass_metrics import pass_at_k, pass_hat_k
 from evals.unit_tests.tracing import unit_test_trace
 
 INSTRUCTIONS = """\
@@ -42,8 +43,12 @@ def test_itinerary_means_the_same_as_the_reference(
         if cosine_similarity(reference_vector, itinerary_vector) < MIN_SIMILARITY:
             failures = failures + 1
 
+    samples = len(itineraries)
+    passed = samples - failures
     assert failures == 0, (
-        f"longe da referência em {failures} de {len(itineraries)} roteiros"
+        f"longe da referência em {failures} de {samples} roteiros "
+        f"(pass@1 = {pass_at_k(samples, passed, 1):.2f}, "
+        f"pass^{samples} = {pass_hat_k(samples, passed, samples):.2f})"
     )
 
 

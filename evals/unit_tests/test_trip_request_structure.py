@@ -13,6 +13,7 @@ from app.agents.input_interpreter_agent import (
 )
 from app.core.agent import user_message
 from app.core.model_client import ModelClient
+from app.evals.pass_metrics import pass_at_k, pass_hat_k
 from evals.unit_tests.tracing import unit_test_trace
 
 TODAY = date(2026, 10, 7)
@@ -27,7 +28,13 @@ def test_reply_follows_the_trip_request_schema(replies: list[str]) -> None:
         except ValidationError:
             failures = failures + 1
 
-    assert failures == 0, f"fora do schema em {failures} de {len(replies)} respostas"
+    samples = len(replies)
+    passed = samples - failures
+    assert failures == 0, (
+        f"fora do schema em {failures} de {samples} respostas "
+        f"(pass@1 = {pass_at_k(samples, passed, 1):.2f}, "
+        f"pass^{samples} = {pass_hat_k(samples, passed, samples):.2f})"
+    )
 
 
 # Atividade 1: o pedido diz "com minha namorada", então guests tem que ser 2.

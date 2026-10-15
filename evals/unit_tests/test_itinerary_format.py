@@ -9,6 +9,7 @@ import pytest
 from app.agents.output_generator_agent import build_output_generator_agent
 from app.core.agent import user_message
 from app.core.model_client import ModelClient
+from app.evals.pass_metrics import pass_at_k, pass_hat_k
 from evals.unit_tests.tracing import unit_test_trace
 
 INSTRUCTIONS = """\
@@ -33,7 +34,13 @@ def test_itinerary_has_no_iso_dates(itineraries: list[str]) -> None:
         if ISO_DATE.search(itinerary):
             failures = failures + 1
 
-    assert failures == 0, f"data ISO em {failures} de {len(itineraries)} roteiros"
+    samples = len(itineraries)
+    passed = samples - failures
+    assert failures == 0, (
+        f"data ISO em {failures} de {samples} roteiros "
+        f"(pass@1 = {pass_at_k(samples, passed, 1):.2f}, "
+        f"pass^{samples} = {pass_hat_k(samples, passed, samples):.2f})"
+    )
 
 
 # Atividade 1: o roteiro não tem nenhum emoji (a regex não pode casar).

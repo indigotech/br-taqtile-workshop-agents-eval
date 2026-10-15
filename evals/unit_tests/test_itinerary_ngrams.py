@@ -10,6 +10,7 @@ import pytest
 from app.agents.output_generator_agent import build_output_generator_agent
 from app.core.agent import user_message
 from app.core.model_client import ModelClient
+from app.evals.pass_metrics import pass_at_k, pass_hat_k
 from evals.unit_tests.tracing import unit_test_trace
 
 INSTRUCTIONS = """\
@@ -42,8 +43,12 @@ def test_itinerary_covers_the_reference_bigrams(itineraries: list[str]) -> None:
         if len(shared) / len(reference_bigrams) < MIN_BIGRAM_RECALL:
             failures = failures + 1
 
+    samples = len(itineraries)
+    passed = samples - failures
     assert failures == 0, (
-        f"poucos bigramas da referência em {failures} de {len(itineraries)} roteiros"
+        f"poucos bigramas da referência em {failures} de {samples} roteiros "
+        f"(pass@1 = {pass_at_k(samples, passed, 1):.2f}, "
+        f"pass^{samples} = {pass_hat_k(samples, passed, samples):.2f})"
     )
 
 

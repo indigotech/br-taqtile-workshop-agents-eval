@@ -80,6 +80,8 @@ Sem uma `MODEL_API_KEY` de verdade no `.env`, a pasta inteira é pulada com o mo
 
 Cada execução gasta tokens e a resposta do Modelo muda de uma vez pra outra: repita a checagem `runs` vezes e compare a taxa de acerto com um limite, em vez de depender de uma única resposta.
 
+A mensagem de falha de cada teste mostra o pass@1 (chance de uma execução passar) e o pass^n (chance de todas as n passarem), calculados por `pass_at_k` e `pass_hat_k` em `app/evals/pass_metrics.py`.
+
 ### LLM como juiz (promptfoo)
 
 Quando a resposta é texto aberto e a qualidade depende do pedido (sugestões que respeitam as preferências do usuário, por exemplo), regex e similaridade não bastam: um segundo modelo, o juiz, dá a nota seguindo uma rubrica. Os evals ficam em `evals/judge/` e rodam com o [promptfoo](https://www.promptfoo.dev/):
