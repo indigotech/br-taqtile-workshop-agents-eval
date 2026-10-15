@@ -23,7 +23,7 @@ list-outdated-dependencies: ## List outdated direct dependencies
 
 .PHONY: setup-env
 setup-env: ## Create .env from sample.env (never overwrites an existing .env)
-	@if [ -f .env ]; then echo ".env already exists, leaving it untouched."; else cp sample.env .env && echo "Created .env — fill in MODEL_API_KEY."; fi
+	@if [ -f .env ]; then echo ".env already exists, leaving it untouched."; else cp sample.env .env && echo "Created .env — fill in MODEL_API_KEY and the Langfuse keys."; fi
 
 .PHONY: run
 run: ## Start the terminal chat (reads .env)
@@ -81,19 +81,6 @@ view-judge: ## Open the promptfoo results UI for the judge evals
 .PHONY: reset-db
 reset-db: ## Recreate the local SQLite database from the schema and seed it
 	@uv run python -m scripts.reset_database
-
-.PHONY: run-langfuse
-run-langfuse: ## Start the local Langfuse stack (http://localhost:3000)
-	@docker compose up -d
-	@echo "Langfuse starting at http://localhost:$${LANGFUSE_PORT:-3000} (login: workshop@example.com / workshop123)"
-
-.PHONY: stop-langfuse
-stop-langfuse: ## Stop the local Langfuse stack, keeping its data
-	@docker compose stop
-
-.PHONY: clean-langfuse
-clean-langfuse: ## Remove the local Langfuse stack and all of its traces
-	@docker compose down --volumes --remove-orphans
 
 .PHONY: test
 test: ## Run tests (TEST_PATH narrows by path, ARGS forwards flags, e.g. make test ARGS="-k tool_loop")

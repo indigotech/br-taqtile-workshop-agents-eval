@@ -101,11 +101,10 @@ While classifying, apply:
   `pydantic` + `pydantic-settings`, `langfuse` + the `opentelemetry-*` packages
   it pulls, a lib and its `types-*` stubs (`toml` + `types-toml`). The family
   updates as a unit, classified by its riskiest member.
-- **SDK ↔ server coupling**: the `langfuse` SDK major must match the Langfuse
-  server image tag in `docker-compose.yml` (`langfuse:4` / `langfuse-worker:4`).
-  A `langfuse` major bump is a Wave 3 item that also bumps both image tags, and
-  its gate includes `make clean-langfuse && make run-langfuse` plus one real
-  `make run` turn showing up as a trace.
+- **SDK ↔ server coupling**: traces go to Langfuse Cloud, which always runs the
+  latest server, so the `langfuse` SDK major must be one Langfuse Cloud
+  supports. A `langfuse` major bump is a Wave 3 item whose gate includes one
+  real `make run` turn showing up as a trace in a Langfuse Cloud project.
 - **Constraint-coupled groups**: a lib plus the packages that depend on it with
   a narrow range (e.g. `openai` capping `pydantic`). Python has
   no peer-dependency concept — the constraint

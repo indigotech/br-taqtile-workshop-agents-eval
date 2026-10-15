@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-A multi-agent travel planner ("planejador de viagens") that serves as the starting point of an agent-evaluation workshop. It is a terminal chat in Python that calls the model through the OpenAI SDK's Chat Completions API directly — **no agent framework** — with a hand-written tool-calling loop, a local SQLite database, and a local Langfuse for traces.
+A multi-agent travel planner ("planejador de viagens") that serves as the starting point of an agent-evaluation workshop. It is a terminal chat in Python that calls the model through the OpenAI SDK's Chat Completions API directly — **no agent framework** — with a hand-written tool-calling loop, a local SQLite database, and Langfuse Cloud for traces (each student uses their own free account; nothing of Langfuse runs locally).
 
 **The agents are meant to be bad.** Later phases plant defects on purpose (prompts, orchestration, parameters) so the workshop's evaluation techniques have something to find. Those defects live in agent *behavior*; the *code* still follows every convention below. Never "fix" an agent's prompt or parameters unless the task asks for it.
 
@@ -22,8 +22,7 @@ Tests never call the real model API: use `ScriptedModelClient` from `tests/helpe
 ## Running Locally
 
 ```bash
-make setup-env                       # creates .env from sample.env; then fill in MODEL_API_KEY
-make run-langfuse                    # local Langfuse at http://localhost:3000 (keys are pre-provisioned)
+make setup-env                       # creates .env from sample.env; then fill in MODEL_API_KEY and the Langfuse Cloud keys
 make run                             # terminal chat; creates and seeds the DB on first run
 make reset-db                        # recreate data/planner.db from schema.sql + seed.sql
 make smoke-test                      # real two-turn conversation on a throwaway DB (needs MODEL_API_KEY)
@@ -33,7 +32,7 @@ make install-judge                   # once, installs promptfoo (Node 22.22+) fo
 make eval-judge ARGS="--repeat 3"    # promptfoo eval in evals/judge/ (CONFIG=… picks another); make view-judge opens the results
 ```
 
-Set `LANGFUSE_TRACING_ENABLED=false` in `.env` to run without Langfuse.
+Traces go to Langfuse Cloud (`LANGFUSE_BASE_URL`, EU region) with the project keys each student creates under Settings > API Keys. With either key empty the app runs with tracing off and logs a warning; set `LANGFUSE_TRACING_ENABLED=false` in `.env` to turn it off on purpose.
 
 ## Architecture
 

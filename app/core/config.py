@@ -1,8 +1,11 @@
+import logging
 from pathlib import Path
 from typing import Literal
 
 from pydantic import NonNegativeInt, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -48,7 +51,7 @@ class Settings(BaseSettings):
     FORCE_SLOW_TOOL: str | None = None
 
     LANGFUSE_TRACING_ENABLED: bool = True
-    LANGFUSE_BASE_URL: str = "http://localhost:3000"
+    LANGFUSE_BASE_URL: str = "https://cloud.langfuse.com"
     LANGFUSE_PUBLIC_KEY: str | None = None
     LANGFUSE_SECRET_KEY: str | None = None
 
@@ -60,14 +63,17 @@ class Settings(BaseSettings):
         return value.upper() if isinstance(value, str) else value
 
     @model_validator(mode="after")
-    def _require_langfuse_keys_when_tracing(self) -> "Settings":
+    def _disable_tracing_without_langfuse_keys(self) -> "Settings":
+        # Each student creates their own Langfuse Cloud keys, so the chat must
+        # still run before they do; tracing turns off rather than failing.
         if self.LANGFUSE_TRACING_ENABLED and not (
             self.LANGFUSE_PUBLIC_KEY and self.LANGFUSE_SECRET_KEY
         ):
-            raise ValueError(
-                "LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY must be set when "
-                "LANGFUSE_TRACING_ENABLED is true"
+            logger.warning(
+                "LANGFUSE_PUBLIC_KEY or LANGFUSE_SECRET_KEY is empty in .env: "
+                "tracing is off until both are set"
             )
+            self.LANGFUSE_TRACING_ENABLED = False
         return self
 
 

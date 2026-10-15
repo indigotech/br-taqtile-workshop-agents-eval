@@ -22,7 +22,7 @@ Thin context managers over the Langfuse v4 SDK (OpenTelemetry based), nested by 
 - `observe_tool` — a `tool` observation per tool execution, with input, output and error. Opened only by `ToolRegistry`.
 - `observe_embedding` — an `embedding` observation per `ModelClient.embed` call.
 
-Latency comes from the observation timings for free. With `LANGFUSE_TRACING_ENABLED=false` every context manager still works and records nothing.
+Latency comes from the observation timings for free. With `LANGFUSE_TRACING_ENABLED=false` every context manager still works and records nothing. Traces go to Langfuse Cloud by default (`LANGFUSE_BASE_URL`); `Settings` turns tracing off with a warning when either Langfuse key is empty, so the chat runs before a student has created their keys.
 
 ## Messages (`messages.py`)
 

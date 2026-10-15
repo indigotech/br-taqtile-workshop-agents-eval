@@ -1,6 +1,6 @@
 # Planejador de viagens — workshop de avaliação de agentes
 
-Sistema multi-agente que planeja viagens: consulta as preferências do usuário num SQLite local, clima, eventos e restaurantes, verifica se cabe no orçamento da viagem e reserva a hospedagem. Ele chama o Modelo direto pelo SDK e manda os traces pra um Langfuse local.
+Sistema multi-agente que planeja viagens: consulta as preferências do usuário num SQLite local, clima, eventos e restaurantes, verifica se cabe no orçamento da viagem e reserva a hospedagem. Ele chama o Modelo direto pelo SDK e manda os traces pro Langfuse Cloud.
 
 ## Como funciona
 
@@ -21,7 +21,7 @@ No Langfuse, cada mensagem vira um trace com os agentes, as chamadas ao Modelo e
 ## Requisitos
 
 - [uv](https://docs.astral.sh/uv/getting-started/installation/). Ele baixa o Python 3.13 sozinho, então não é preciso instalar Python.
-- [Docker](https://docs.docker.com/get-docker/) com Compose, só pro Langfuse. A primeira execução baixa cerca de 1,5 GB de imagens.
+- Uma conta gratuita no [Langfuse Cloud](https://cloud.langfuse.com) (plano Hobby), onde ficam os seus traces. Nada do Langfuse roda na sua máquina.
 - [Node.js](https://nodejs.org/) 22.22 ou mais novo, só pros evals de LLM como juiz (promptfoo). A instalação ocupa cerca de 2,3 GB em `node_modules/`.
 - Uma chave da API do modelo. O padrão é a OpenAI (<https://platform.openai.com/api-keys>); pra usar outro provider compatível com Chat Completions (DeepSeek, Gemini), ajuste `MODEL_BASE_URL` e `MODEL` no `.env`.
 
@@ -30,16 +30,20 @@ No Langfuse, cada mensagem vira um trace com os agentes, as chamadas ao Modelo e
 ```bash
 make install        # instala Python e dependências
 make setup-env      # cria o .env a partir do sample.env
-# edite o .env e preencha MODEL_API_KEY
-make run-langfuse   # sobe o Langfuse em http://localhost:3000
+# edite o .env: preencha MODEL_API_KEY e as chaves do Langfuse (veja abaixo)
 make run            # abre o chat no terminal
 ```
 
 Ao abrir, o chat pergunta seu nome. Quem já tem cadastro (os usuários de exemplo são Ana, Bruno, Carla e Diego) vai direto pra conversa; quem não tem pode se cadastrar ali mesmo, com nome, cidade onde mora e e-mail. O orçamento não fica salvo: muda a cada viagem, então o planejador pergunta quando você não diz.
 
-Pra entrar no Langfuse use `workshop@example.com` / `workshop123`. As chaves de API já vêm configuradas no `sample.env`, então não precisa gerar nenhuma. A cada resposta, o chat imprime o link do trace.
+### Langfuse Cloud
 
-Sem Docker, dá pra rodar sem observabilidade: coloque `LANGFUSE_TRACING_ENABLED=false` no `.env`.
+1. Crie uma conta em <https://cloud.langfuse.com> (região EU, plano Hobby gratuito).
+2. Crie uma organização e, dentro dela, um projeto: as chaves de API são por projeto.
+3. No projeto, abra **Settings > API Keys > Create new API keys**.
+4. Cole a public key em `LANGFUSE_PUBLIC_KEY` e a secret key em `LANGFUSE_SECRET_KEY` no `.env`. A secret key só aparece uma vez.
+
+A cada resposta, o chat imprime o link do trace. Com alguma das chaves vazia, o chat roda sem tracing e avisa ao abrir; pra desligar de propósito, coloque `LANGFUSE_TRACING_ENABLED=false` no `.env`.
 
 ## Comandos
 
@@ -51,8 +55,6 @@ Sem Docker, dá pra rodar sem observabilidade: coloque `LANGFUSE_TRACING_ENABLED
 | `make smoke-test` | Roda uma conversa real de ponta a ponta num banco descartável |
 | `make run-dataset RUNS=3 CASES=id1,id2` | Roda os casos de `evals/dataset.jsonl` N vezes e salva as saídas em `evals/runs/` |
 | `make reset-db` | Recria o banco `data/planner.db` com os dados de exemplo |
-| `make run-langfuse` / `make stop-langfuse` | Sobe / para o Langfuse local |
-| `make clean-langfuse` | Remove o Langfuse e todos os traces |
 | `make test` | Roda os testes (sem chamar a API do Modelo) |
 | `make test-model RUNS=3` | Roda os testes de `evals/unit_tests/` chamando o Modelo de verdade (gasta tokens) |
 | `make install-judge` | Instala o promptfoo (precisa de Node) |
@@ -98,8 +100,8 @@ O juiz é o mesmo modelo dos agentes, com a chave `MODEL_API_KEY` do `.env`. Cad
 
 ## Problemas comuns
 
-- **Porta 3000 ocupada:** troque `LANGFUSE_PORT` e a porta de `LANGFUSE_BASE_URL` no `.env` (por exemplo, pra 3300) e rode `make run-langfuse` de novo.
+- **`tracing is off until both are set` ao abrir o chat:** falta `LANGFUSE_PUBLIC_KEY` ou `LANGFUSE_SECRET_KEY` no `.env` (veja [Langfuse Cloud](#langfuse-cloud)).
 - **`erro na API do modelo: Error code: 401`:** a `MODEL_API_KEY` do `.env` está errada.
 - **`erro na API do modelo: Error code: 429`:** o limite de requisições ou a cota acabou. Espere um minuto ou use outro modelo em `MODEL`.
 - **`turno interrompido: atingiu o limite de tokens por turno`:** um turno passou de `MODEL_TOKEN_BUDGET_PER_TURN` (padrão 85 mil tokens, cerca de 2x um turno normal), em geral um agente em loop. A resposta é descartada pra proteger a cota compartilhada; comece uma nova conversa.
-- **Langfuse não abre logo depois do `make run-langfuse`:** a primeira subida leva de 1 a 2 minutos enquanto os bancos inicializam.
+- **Trace não aparece no Langfuse:** confira se as chaves são do projeto que você está olhando e se `LANGFUSE_BASE_URL` é `https://cloud.langfuse.com`. Os traces chegam em alguns segundos.
