@@ -43,7 +43,7 @@ x-langfuse-env: &langfuse-env
 
 services:
   langfuse-worker:
-    image: docker.langfuse.com/langfuse/langfuse-worker:4
+    image: docker.langfuse.com/langfuse/langfuse-worker:4.50.0
     restart: unless-stopped
     depends_on: &langfuse-depends-on
       postgres:
@@ -58,7 +58,7 @@ services:
       <<: *langfuse-env
 
   langfuse-web:
-    image: docker.langfuse.com/langfuse/langfuse:4
+    image: docker.langfuse.com/langfuse/langfuse:4.50.0
     restart: unless-stopped
     depends_on: *langfuse-depends-on
     ports:
@@ -79,7 +79,7 @@ services:
       LANGFUSE_INIT_USER_PASSWORD: workshop123
 
   clickhouse:
-    image: docker.io/clickhouse/clickhouse-server:25.12
+    image: docker.io/clickhouse/clickhouse-server:25.12.11.4
     restart: unless-stopped
     user: "101:101"
     environment:
@@ -89,6 +89,10 @@ services:
     volumes:
       - langfuse_clickhouse_data:/var/lib/clickhouse
       - langfuse_clickhouse_logs:/var/log/clickhouse-server
+      # Sem isto, as tabelas de log internas (trace_log à frente) crescem
+      # GBs por dia sem TTL e enchem o disco do Docker; o Langfuse não as lê.
+      # https://langfuse.com/self-hosting/configuration/scaling
+      - ./langfuse/clickhouse-system-logs.xml:/etc/clickhouse-server/config.d/system-logs.xml:ro
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1
       interval: 5s
@@ -97,7 +101,9 @@ services:
       start_period: 1s
 
   minio:
-    image: cgr.dev/chainguard/minio
+    # A Chainguard só publica a tag latest de graça; o digest fixa o
+    # RELEASE.2026-09-22T19-25-18Z.
+    image: cgr.dev/chainguard/minio@sha256:4cf4831a2bbcf13ddca09c1cbcc9faff716dd3c4247e0babc32864b8ee8e0034
     restart: unless-stopped
     entrypoint: sh
     # Creates the 'langfuse' bucket before starting the service.
@@ -117,7 +123,8 @@ services:
       start_period: 1s
 
   redis:
-    image: docker.io/redis:7
+    # Imagens oficiais são reconstruídas sob a mesma tag; o digest fixa o build.
+    image: docker.io/redis:7.4.11@sha256:c6eabf748fc7a61dbb5a705c78bcf3d6377b1127a97d0ce965c11c44ba46896f
     restart: unless-stopped
     command: >
       --requirepass myredissecret
@@ -131,7 +138,8 @@ services:
       retries: 10
 
   postgres:
-    image: docker.io/postgres:17
+    # Imagens oficiais são reconstruídas sob a mesma tag; o digest fixa o build.
+    image: docker.io/postgres:17.11@sha256:d74eeac9a635390a49bc21bd49fccd973de707e2a53a76ac49b552b8712ec46f
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
