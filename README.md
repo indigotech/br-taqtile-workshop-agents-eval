@@ -25,7 +25,31 @@ No Langfuse, cada mensagem vira um trace com os agentes, as chamadas ao Modelo e
 - [Node.js](https://nodejs.org/) 22.22 ou mais novo, só pros evals de LLM como juiz (promptfoo). A instalação ocupa cerca de 2,3 GB em `node_modules/`.
 - Uma chave da API do modelo. O padrão é a OpenAI (<https://platform.openai.com/api-keys>); pra usar outro provider compatível com Chat Completions (DeepSeek, Gemini), ajuste `MODEL_BASE_URL` e `MODEL` no `.env`.
 
+## Instalação rápida
+
+Um comando instala o que falta, clona o repositório, instala as dependências (`make install` e `make install-judge`), cria o `.env` e termina rodando os testes (`make test-ci`). Pode rodar de novo à vontade: o que já está pronto é pulado.
+
+**Windows 10/11**, no PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/indigotech/br-taqtile-workshop-agents-eval/main/scripts/setup_workshop.ps1 | iex
+```
+
+O `scripts/setup_workshop.ps1` instala pelo `winget` o Git, o uv, o Node.js 22 e o GNU Make (o Windows pode pedir permissão de administrador), põe a pasta `bin` do Git no PATH, porque o `make` roda as receitas no `sh` que vem com o Git, e clona em `%USERPROFILE%\br-taqtile-workshop-agents-eval`. Sem o `winget`, instale o [App Installer](https://apps.microsoft.com/detail/9NBLGGH4NNS1) antes. Depois, abra um PowerShell novo para o PATH valer e use os comandos `make` normalmente.
+
+**macOS** (Intel ou Apple Silicon), **Linux** (Ubuntu/Debian) ou **WSL2**:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/indigotech/br-taqtile-workshop-agents-eval/main/scripts/setup_workshop.sh | bash
+```
+
+O `scripts/setup_workshop.sh` confere git, make e curl (no macOS, pelas Command Line Tools do Xcode; no Linux, pelo `apt-get`), instala sem sudo o uv e o Node.js 22 (pelo nvm) e clona em `~/br-taqtile-workshop-agents-eval`.
+
+Nos dois, `WORKSHOP_DIR` troca a pasta do clone. Se você já baixou o `.env` da turma do Drive (`workshop.env` ou `.env` na pasta Downloads), ele é copiado; senão, o `.env` sai do `sample.env` e você cola a `MODEL_API_KEY`. No fim, o script lista o que falta: as chaves do [Langfuse Cloud](#langfuse-cloud) e o `make run`.
+
 ## Setup
+
+Para instalar à mão, sem o script:
 
 ```bash
 make install        # instala Python e dependências

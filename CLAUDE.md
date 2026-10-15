@@ -34,6 +34,8 @@ make eval-judge ARGS="--repeat 3"    # promptfoo eval in evals/judge/ (CONFIG=â€
 
 Traces go to Langfuse Cloud (`LANGFUSE_BASE_URL`, EU region) with the project keys each student creates under Settings > API Keys. With either key empty the app runs with tracing off and logs a warning; set `LANGFUSE_TRACING_ENABLED=false` in `.env` to turn it off on purpose.
 
+Students run the same `Makefile` on native Windows, where GNU Make executes the recipes in Git for Windows' `sh.exe`. Keep recipes POSIX `sh` (no bashisms), and reach the virtualenv's interpreter through `$(VENV_PYTHON)`, never `.venv/bin/python`. `scripts/setup_workshop.ps1` (Windows) and `scripts/setup_workshop.sh` (macOS, Linux, WSL) set up a student machine in one command.
+
 ## Architecture
 
 A lean, by-layer take on the Clean Architecture used in Taqtile's AI projects, under `app/`:

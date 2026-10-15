@@ -40,7 +40,10 @@ def main() -> None:
     results_path = output_directory / "results.jsonl"
     model_client = ModelClient()
     try:
-        with build_http_client() as http_client, results_path.open("w") as results:
+        with (
+            build_http_client() as http_client,
+            results_path.open("w", encoding="utf-8") as results,
+        ):
             for case in cases:
                 for run_index in range(1, arguments.runs + 1):
                     logger.info(

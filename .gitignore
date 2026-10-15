@@ -28,3 +28,6 @@ CLAUDE.local.md
 # promptfoo (make install-judge / eval-judge)
 node_modules/
 .promptfoo/
+
+# .env da turma baixado do Drive: tem a chave do modelo
+workshop.env

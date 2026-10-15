@@ -1,5 +1,16 @@
 sources = app tests scripts evals
 
+# On Windows the recipes still run in a POSIX shell: GNU Make picks up the sh.exe
+# from Git for Windows' Git\bin when it is on PATH (scripts/setup_workshop.ps1
+# puts it there). Python's default encoding there is the ANSI code page, which
+# cannot print everything the model writes, hence UTF-8 mode.
+ifeq ($(OS),Windows_NT)
+VENV_PYTHON = $(CURDIR)/.venv/Scripts/python.exe
+export PYTHONUTF8 = 1
+else
+VENV_PYTHON = $(CURDIR)/.venv/bin/python
+endif
+
 # pytest verbosity — override for a compact single-run summary, e.g. make test PYTEST_FLAGS=-q
 PYTEST_FLAGS ?= -vv
 
@@ -23,7 +34,7 @@ list-outdated-dependencies: ## List outdated direct dependencies
 
 .PHONY: setup-env
 setup-env: ## Create .env from sample.env (never overwrites an existing .env)
-	@if [ -f .env ]; then echo ".env already exists, leaving it untouched."; else cp sample.env .env && echo "Created .env — fill in MODEL_API_KEY and the Langfuse keys."; fi
+	@if [ -f .env ]; then echo ".env already exists, leaving it untouched."; else cp sample.env .env && echo "Created .env: fill in MODEL_API_KEY and the Langfuse keys."; fi
 
 .PHONY: run
 run: ## Start the terminal chat (reads .env)
@@ -72,7 +83,7 @@ PROMPTFOO = LOG_LEVEL=info NODE_NO_WARNINGS=1 PROMPTFOO_DISABLE_TELEMETRY=1 PROM
 
 .PHONY: eval-judge
 eval-judge: ## Run a promptfoo LLM-as-a-judge eval, costs tokens (CONFIG=evals/judge/x.yaml, ARGS="--repeat 3")
-	@PROMPTFOO_PYTHON=$(CURDIR)/.venv/bin/python PYTHONPATH=$(CURDIR) $(PROMPTFOO) eval --config $(CONFIG) --no-cache $(ARGS)
+	@PROMPTFOO_PYTHON=$(VENV_PYTHON) PYTHONPATH=$(CURDIR) $(PROMPTFOO) eval --config $(CONFIG) --no-cache $(ARGS)
 
 .PHONY: view-judge
 view-judge: ## Open the promptfoo results UI for the judge evals
