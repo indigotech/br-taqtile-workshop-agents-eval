@@ -56,8 +56,9 @@ def test_itinerary_covers_the_reference_bigrams(itineraries: list[str]) -> None:
 # as notas.
 
 
-# Atividade 2: reescreva a referência com outras palavras e o mesmo sentido, e
-# veja a nota cair.
+# Atividade 2: reescreva a referência inteira com outras palavras e as mesmas
+# informações (nomes e valores iguais, como "Pousada do Porto"), e veja a nota
+# cair.
 
 
 def bigrams(text: str) -> set[tuple[str, str]]:

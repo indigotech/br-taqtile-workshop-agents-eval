@@ -25,7 +25,9 @@ R$ 450,00, alimentação R$ 600,00, atividades R$ 300,00; total R$ 1.350,00.
 
 ISO_DATE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
 # EMOJI = re.compile("[\U0001F300-\U0001FAFF\U00002600-\U000027BF]")
-# RESERVATION_NUMBER = re.compile(r"reserva\D{0,20}\b5\b", re.IGNORECASE)
+# RESERVATION_NUMBER = re.compile(
+#     r"reserva\D{0,60}(?:n\.?[º°]|número|#)\W{0,3}5\b", re.IGNORECASE
+# )
 
 
 def test_itinerary_has_no_iso_dates(itineraries: list[str]) -> None:

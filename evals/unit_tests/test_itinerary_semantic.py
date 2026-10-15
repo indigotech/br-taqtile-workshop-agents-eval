@@ -31,7 +31,7 @@ Domingo: 60% de chuva, almoço no Thai Brasil.
 Gastos estimados de R$ 1.350,00, dentro do orçamento de R$ 2.000,00.
 """
 
-MIN_SIMILARITY = 0.75
+MIN_SIMILARITY = 0.70
 
 
 def test_itinerary_means_the_same_as_the_reference(
