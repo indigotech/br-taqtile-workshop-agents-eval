@@ -1,4 +1,3 @@
-import logging
 from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
@@ -6,8 +5,6 @@ from contextvars import ContextVar
 from pydantic import BaseModel
 
 from app.core.config import settings
-
-logger = logging.getLogger(__name__)
 
 
 class TokenBudget(BaseModel):
@@ -55,11 +52,6 @@ def ensure_within_budget() -> None:
     if budget is None or budget.limit is None:
         return
     if budget.tokens_used >= budget.limit:
-        logger.warning(
-            "Refusing a model call: %s of %s tokens already used in this turn",
-            budget.tokens_used,
-            budget.limit,
-        )
         raise TokenBudgetExceededError(budget.limit, budget.tokens_used)
 
 

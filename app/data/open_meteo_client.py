@@ -1,10 +1,7 @@
-import logging
 from datetime import date
 
 import httpx
 from pydantic import BaseModel
-
-logger = logging.getLogger(__name__)
 
 _FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 _DAILY_VARIABLES = (
@@ -69,7 +66,6 @@ class OpenMeteoClient:
         )
         if response.status_code == httpx.codes.BAD_REQUEST:
             reason = _OpenMeteoError.model_validate(response.json()).reason
-            logger.info("Open-Meteo refused the forecast: %s", reason)
             raise ForecastUnavailableError(reason)
         response.raise_for_status()
         daily = _OpenMeteoResponse.model_validate(response.json()).daily

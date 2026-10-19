@@ -1,4 +1,3 @@
-import logging
 from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
@@ -12,8 +11,6 @@ from app.core.config import settings
 from app.core.messages import ChatMessage, GenerationConfig, ToolCall
 from app.core.observability import observe_embedding, observe_generation
 from app.core.token_budget import charge_tokens, ensure_within_budget
-
-logger = logging.getLogger(__name__)
 
 # A single orchestrated turn makes a dozen or more calls, so a rate limit (429)
 # or a transient 5xx would otherwise sink whole turns: the SDK retries those
@@ -58,7 +55,6 @@ class ModelClient:
             ],
             model_parameters=_model_parameters(config),
         ) as generation:
-            logger.debug("Calling %s with %s messages", chosen_model, len(messages))
             completion = self._create_completion(chosen_model, messages, config)
             charge_tokens(_billed_tokens(completion))
             reply = _assistant_message(completion)
@@ -155,7 +151,6 @@ def _assistant_message(completion: ChatCompletion) -> ChatMessage:
     # An empty reply still has to land in the history as an assistant turn, or
     # the next call would send two user turns in a row.
     if not completion.choices:
-        logger.warning("Model returned no choices")
         return ChatMessage(role="assistant")
     message = completion.choices[0].message
     return ChatMessage(

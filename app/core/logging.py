@@ -6,7 +6,7 @@ from app.core.terminal import colorize, style_for_log_level, supports_color
 _FORMAT = "[%(levelname)s - %(name)s:%(lineno)d]: %(message)s"
 
 # Third-party loggers that flood DEBUG output with HTTP and OTel internals,
-# drowning the agent and tool logs the workshop is about.
+# drowning the app's own logs.
 _NOISY_LOGGERS = ("httpx", "httpcore", "openai", "langfuse", "opentelemetry")
 
 

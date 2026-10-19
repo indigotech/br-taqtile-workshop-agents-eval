@@ -1,12 +1,8 @@
-import logging
-
 from pydantic import BaseModel, ConfigDict
 
 from app.core.messages import ChatMessage, GenerationConfig
 from app.core.model_client import ModelClient
 from app.core.tools import ToolExecution, ToolRegistry
-
-logger = logging.getLogger(__name__)
 
 
 class ToolLoopResult(BaseModel):
@@ -69,7 +65,6 @@ def run_tool_loop(
                 )
             )
 
-    logger.warning("%s hit the limit of %s iterations", name, max_iterations)
     return ToolLoopResult(
         text=text,
         messages=history,

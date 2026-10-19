@@ -77,7 +77,7 @@ Write a comment only to justify a decision the code cannot explain on its own �
 
 ### Logging
 
-Get a logger per module with `logging.getLogger(__name__)`. Use `%`-style lazy formatting (`logger.info("Tool %s succeeded", name)`) — **never f-strings in log calls**, which format eagerly even when the level is disabled.
+Get a logger per module with `logging.getLogger(__name__)`. Use `%`-style lazy formatting (`logger.info("Registered user %s", user.id)`) — **never f-strings in log calls**, which format eagerly even when the level is disabled.
 
 ### Function Placement
 
