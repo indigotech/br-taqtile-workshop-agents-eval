@@ -29,7 +29,6 @@ make smoke-test                      # real two-turn conversation on a throwaway
 make run-dataset RUNS=3              # play evals/dataset.jsonl N times, saving to evals/runs/ (needs MODEL_API_KEY)
 make test-model RUNS=3               # pytest on evals/unit_tests against the real model; skipped without MODEL_API_KEY
 make install-judge                   # once, installs promptfoo (Node 22.22+) for the LLM-as-a-judge evals
-make install-judge PROMPTFOO_VERSION=0.120.19  # same, for Node 20.19 machines (npm install --no-save; package.json untouched)
 make eval-judge ARGS="--repeat 3"    # promptfoo eval in evals/judge/ (CONFIG=… picks another); make view-judge opens the results
 ```
 

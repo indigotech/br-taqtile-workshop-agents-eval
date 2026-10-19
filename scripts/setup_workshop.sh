@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Prepara a máquina do aluno para o workshop: pré-requisitos, clone do
 # repositório, dependências Python e Node, .env e um teste de sanidade.
+# As três chaves do .env são preenchidas à mão no fim.
 #
 #   curl -fsSL https://raw.githubusercontent.com/indigotech/br-taqtile-workshop-agents-eval/main/scripts/setup_workshop.sh | bash
 #
@@ -8,7 +9,6 @@
 #
 # Variáveis opcionais:
 #   WORKSHOP_DIR             onde clonar (padrão: ~/br-taqtile-workshop-agents-eval)
-#   WORKSHOP_ENV_SEARCH_DIR  onde procurar o .env baixado do Drive (padrão: ~/Downloads)
 #   WORKSHOP_REPOSITORY_URL  repositório a clonar (padrão: o do workshop no GitHub)
 #   WORKSHOP_BRANCH          branch a clonar (padrão: main)
 set -euo pipefail
@@ -284,26 +284,6 @@ ensure_env_file() {
     success ".env já existe, deixei como está"
     return
   fi
-
-  local search_directory="${WORKSHOP_ENV_SEARCH_DIR:-${HOME}/Downloads}"
-  local candidates=()
-  local file
-  if [[ -d "${search_directory}" ]]; then
-    for file in "${search_directory}"/workshop*.env "${search_directory}/.env"; do
-      if [[ -f "${file}" ]] && grep -q '^MODEL_API_KEY=' "${file}"; then
-        candidates+=("${file}")
-      fi
-    done
-  fi
-
-  if ((${#candidates[@]} == 1)); then
-    cp "${candidates[0]}" .env
-    success "Copiei ${candidates[0]} para o .env (é o arquivo da turma, baixado do Drive)"
-    return
-  fi
-  if ((${#candidates[@]} > 1)); then
-    warn "Achei mais de um .env da turma em ${search_directory} (${candidates[*]}); não sei qual usar, então criei um .env vazio. Copie o certo por cima dele."
-  fi
   make setup-env
 }
 
@@ -311,19 +291,32 @@ print_checklist() {
   local repository_directory="$1"
   step "Tudo instalado! Falta pouco:"
   local item=1
-  if grep -qE "^MODEL_API_KEY=('changethis'|'')?$" .env; then
-    info "  ${item}. Baixe o .env da turma no Drive do workshop e copie o MODEL_API_KEY dele para ${repository_directory}/.env"
-    item=$((item + 1))
-  fi
-  if grep -qE "^LANGFUSE_(PUBLIC|SECRET)_KEY=('')?$" .env; then
-    info "  ${item}. Crie uma conta gratuita em https://cloud.langfuse.com (plano Hobby): crie uma organização, dentro dela um projeto, e abra Settings > API Keys > Create new API keys"
-    item=$((item + 1))
-    info "  ${item}. Cole a public key em LANGFUSE_PUBLIC_KEY e a secret key em LANGFUSE_SECRET_KEY no .env (a secret só aparece uma vez)"
+  local missing_keys
+  missing_keys="$(missing_env_keys)"
+  if [[ -n "${missing_keys}" ]]; then
+    info "  ${item}. Abra o ${repository_directory}/.env e preencha estas chaves com os valores que você recebeu:"
+    local key
+    for key in ${missing_keys}; do
+      info "       ${key}"
+    done
+    info "     Cole cada valor entre as aspas, por exemplo: MODEL_API_KEY='sk-...'"
+    info "     As do Langfuse ficam no seu projeto em https://cloud.langfuse.com > Settings > API Keys."
     item=$((item + 1))
   fi
   info "  ${item}. Abra um terminal novo (pro uv e o Node entrarem no PATH) e rode:"
   info "       cd ${repository_directory}"
   info "       make run"
+}
+
+# A key still holding sample.env's placeholder ('changethis') or nothing counts
+# as missing, so running the script again lists only what is left to fill in.
+missing_env_keys() {
+  local key
+  for key in MODEL_API_KEY LANGFUSE_PUBLIC_KEY LANGFUSE_SECRET_KEY; do
+    if ! grep -q "^${key}=" .env || grep -qE "^${key}=('changethis'|''|\"\")?[[:space:]]*$" .env; then
+      echo "${key}"
+    fi
+  done
 }
 
 main "$@"

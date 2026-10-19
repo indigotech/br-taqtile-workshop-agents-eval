@@ -1,5 +1,6 @@
 # Prepara uma maquina Windows 10/11 para o workshop: pre-requisitos via winget,
 # clone do repositorio, dependencias Python e Node, .env e um teste de sanidade.
+# As tres chaves do .env sao preenchidas a mao no fim.
 #
 #   irm https://raw.githubusercontent.com/indigotech/br-taqtile-workshop-agents-eval/main/scripts/setup_workshop.ps1 | iex
 #
@@ -11,7 +12,6 @@
 #
 # Variaveis de ambiente opcionais:
 #   WORKSHOP_DIR             onde clonar (padrao: %USERPROFILE%\br-taqtile-workshop-agents-eval)
-#   WORKSHOP_ENV_SEARCH_DIR  onde procurar o .env baixado do Drive (padrao: %USERPROFILE%\Downloads)
 #   WORKSHOP_REPOSITORY_URL  repositorio a clonar (padrao: o do workshop no GitHub)
 #   WORKSHOP_BRANCH          branch a clonar (padrao: main)
 
@@ -245,42 +245,36 @@ function Initialize-EnvFile {
         Write-Success '.env ja existe, deixei como esta'
         return
     }
-
-    $searchDirectory = if ($env:WORKSHOP_ENV_SEARCH_DIR) { $env:WORKSHOP_ENV_SEARCH_DIR } else { Join-Path $env:USERPROFILE 'Downloads' }
-    $candidates = @()
-    if (Test-Path -LiteralPath $searchDirectory) {
-        $candidates = @(Get-ChildItem -LiteralPath $searchDirectory -File -Force |
-                Where-Object { $_.Name -like 'workshop*.env' -or $_.Name -eq '.env' } |
-                Where-Object { Select-String -LiteralPath $_.FullName -Pattern '^MODEL_API_KEY=' -Quiet })
-    }
-
-    if ($candidates.Count -eq 1) {
-        Copy-Item -LiteralPath $candidates[0].FullName -Destination '.env'
-        Write-Success "Copiei $($candidates[0].FullName) para o .env (e o arquivo da turma, baixado do Drive)"
-        return
-    }
-    if ($candidates.Count -gt 1) {
-        Write-Notice "Achei mais de um .env da turma em $searchDirectory ($(($candidates | ForEach-Object Name) -join ', ')); nao sei qual usar, entao criei um .env a partir do sample.env. Copie o certo por cima dele."
-    }
     Invoke-Checked -Description 'make setup-env' -Command { make setup-env }
 }
 
 function Write-Checklist([string]$RepositoryDirectory) {
     Write-Step 'Tudo instalado! Falta pouco:'
     $item = 1
-    if (Select-String -LiteralPath '.env' -Pattern "^MODEL_API_KEY=('changethis'|'')?\s*$" -Quiet) {
-        Write-Host "  $item. Baixe o .env da turma no Drive do workshop e copie o MODEL_API_KEY dele para $RepositoryDirectory\.env"
-        $item++
-    }
-    if (Select-String -LiteralPath '.env' -Pattern "^LANGFUSE_(PUBLIC|SECRET)_KEY=('')?\s*$" -Quiet) {
-        Write-Host "  $item. Crie uma conta gratuita em https://cloud.langfuse.com (plano Hobby): crie uma organizacao, dentro dela um projeto, e abra Settings > API Keys > Create new API keys"
-        $item++
-        Write-Host "  $item. Cole a public key em LANGFUSE_PUBLIC_KEY e a secret key em LANGFUSE_SECRET_KEY no .env (a secret so aparece uma vez)"
+    $missingKeys = @(Get-MissingEnvKeys)
+    if ($missingKeys.Count -gt 0) {
+        Write-Host "  $item. Abra o $RepositoryDirectory\.env (no Bloco de Notas, por exemplo) e preencha estas chaves com os valores que voce recebeu:"
+        foreach ($key in $missingKeys) {
+            Write-Host "       $key"
+        }
+        Write-Host "     Cole cada valor entre as aspas, por exemplo: MODEL_API_KEY='sk-...'"
+        Write-Host '     As do Langfuse ficam no seu projeto em https://cloud.langfuse.com > Settings > API Keys.'
         $item++
     }
     Write-Host "  $item. Feche este PowerShell e abra um NOVO antes de usar o make (so assim o PATH novo vale). Nele, rode:"
     Write-Host "       cd $RepositoryDirectory"
     Write-Host '       make run'
+}
+
+# A key still holding sample.env's placeholder ('changethis') or nothing counts
+# as missing, so running the script again lists only what is left to fill in.
+function Get-MissingEnvKeys {
+    foreach ($key in @('MODEL_API_KEY', 'LANGFUSE_PUBLIC_KEY', 'LANGFUSE_SECRET_KEY')) {
+        if (-not (Select-String -LiteralPath '.env' -Pattern "^$key=" -Quiet) -or
+            (Select-String -LiteralPath '.env' -Pattern "^$key=('changethis'|''|`"`")?\s*$" -Quiet)) {
+            $key
+        }
+    }
 }
 
 Main
