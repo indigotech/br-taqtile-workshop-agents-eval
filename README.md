@@ -55,6 +55,7 @@ Para instalar à mão, sem o script:
 make install        # instala Python e dependências
 make setup-env      # cria o .env a partir do sample.env
 # edite o .env: preencha MODEL_API_KEY e as chaves do Langfuse (veja abaixo)
+make check-env      # confere as chaves: uma chamada ao modelo e um trace no Langfuse
 make run            # abre o chat no terminal
 ```
 
@@ -76,6 +77,7 @@ A cada resposta, o chat imprime o link do trace. Com alguma das chaves vazia, o 
 | `make run` | Chat no terminal |
 | `make run-case-tool-error` | Chat com uma tool falhando em toda chamada (`ERROR_TOOL=search_accommodations`), pra ver um span de erro no Langfuse |
 | `make run-case-slow-tool` | Chat com uma tool demorando 5s a mais em toda chamada (`SLOW_TOOL=search_accommodations`), pra ela aparecer como a mais lenta na timeline |
+| `make check-env` | Confere o `.env`: uma chamada real ao Modelo e um trace que chega no Langfuse Cloud |
 | `make smoke-test` | Roda uma conversa real de ponta a ponta num banco descartável |
 | `make run-dataset RUNS=3 CASES=id1,id2` | Roda os casos de `evals/dataset.json` N vezes e salva as saídas em `evals/runs/` |
 | `make reset-db` | Recria o banco `data/planner.db` com os dados de exemplo |

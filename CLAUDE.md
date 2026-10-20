@@ -25,6 +25,7 @@ Tests never call the real model API: use `ScriptedModelClient` from `tests/helpe
 make setup-env                       # creates .env from sample.env; then fill in MODEL_API_KEY and the Langfuse Cloud keys
 make run                             # terminal chat; creates and seeds the DB on first run
 make reset-db                        # recreate data/planner.db from schema.sql + seed.sql
+make check-env                       # check .env: one real model call and one trace that reaches Langfuse Cloud
 make smoke-test                      # real two-turn conversation on a throwaway DB (needs MODEL_API_KEY)
 make run-dataset RUNS=3              # play evals/dataset.json N times, saving to evals/runs/ (needs MODEL_API_KEY)
 make test-model RUNS=3               # pytest on evals/unit_tests against the real model; skipped without MODEL_API_KEY

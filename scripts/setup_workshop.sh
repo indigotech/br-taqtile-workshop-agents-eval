@@ -305,6 +305,7 @@ print_checklist() {
   fi
   info "  ${item}. Abra um terminal novo (pro uv e o Node entrarem no PATH) e rode:"
   info "       cd ${repository_directory}"
+  info "       make check-env   # confere as chaves: uma chamada ao modelo e um trace no Langfuse"
   info "       make run"
 }
 

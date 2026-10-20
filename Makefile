@@ -111,6 +111,10 @@ test-model: RUNS = 3
 test-model: ## Run evals/unit_tests against the real API, costs tokens (RUNS=3, TEST_PATH, ARGS="-s -k ...")
 	@RUNS=$(RUNS) uv run pytest $(TEST_PATH) $(PYTEST_FLAGS) $(ARGS)
 
+.PHONY: check-env
+check-env: ## Check the .env keys: one real model call and one trace on Langfuse Cloud
+	@$(MAKE) test-model TEST_PATH=evals/unit_tests/test_environment.py RUNS=1
+
 # results.json that eval-end-to-end checks; empty picks the latest in evals/runs/
 RESULTS ?=
 

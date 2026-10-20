@@ -263,6 +263,7 @@ function Write-Checklist([string]$RepositoryDirectory) {
     }
     Write-Host "  $item. Feche este PowerShell e abra um NOVO antes de usar o make (so assim o PATH novo vale). Nele, rode:"
     Write-Host "       cd $RepositoryDirectory"
+    Write-Host '       make check-env   # confere as chaves: uma chamada ao modelo e um trace no Langfuse'
     Write-Host '       make run'
 }
 
