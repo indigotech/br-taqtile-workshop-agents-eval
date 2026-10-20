@@ -1,7 +1,8 @@
 """Base da atividade: o interpretador lê a primeira mensagem de cada caso do
-golden dataset (evals/dataset.json), e o teste confere cada resposta. Copie o
-teste para cada novo campo, comparando com o esperado do caso. Os espaços das
-duas atividades estão marcados abaixo do teste."""
+golden dataset (evals/dataset.json), e cada teste confere as respostas: o
+primeiro valida o schema, os outros dois comparam um campo com o esperado do
+caso (case.expected_trip). A atividade é rodar e explicar o resultado de cada
+caso."""
 
 from datetime import date
 
@@ -38,11 +39,46 @@ def test_reply_follows_the_trip_request_schema(replies: list[str]) -> None:
     )
 
 
-# Atividade 1: guests é igual ao esperado do caso (case.expected_trip.guests).
+def test_reply_has_the_expected_guests(case: EvalCase, replies: list[str]) -> None:
+    expected = case.expected_trip.guests
+    failures = 0
+    for reply in replies:
+        try:
+            trip = TripRequest.model_validate_json(reply)
+        except ValidationError:
+            failures = failures + 1
+            continue
+        if trip.guests != expected:
+            failures = failures + 1
+
+    samples = len(replies)
+    passed = samples - failures
+    assert failures == 0, (
+        f"guests diferente de {expected} em {failures} de {samples} respostas "
+        f"(pass@1 = {pass_at_k(samples, passed, 1):.2f}, "
+        f"pass^{samples} = {pass_hat_k(samples, passed, samples):.2f})"
+    )
 
 
-# Atividade 2: budget_amount é igual ao esperado do caso
-# (case.expected_trip.budget_amount).
+def test_reply_has_the_expected_budget(case: EvalCase, replies: list[str]) -> None:
+    expected = case.expected_trip.budget_amount
+    failures = 0
+    for reply in replies:
+        try:
+            trip = TripRequest.model_validate_json(reply)
+        except ValidationError:
+            failures = failures + 1
+            continue
+        if trip.budget_amount != expected:
+            failures = failures + 1
+
+    samples = len(replies)
+    passed = samples - failures
+    assert failures == 0, (
+        f"budget_amount diferente de {expected} em {failures} de {samples} respostas "
+        f"(pass@1 = {pass_at_k(samples, passed, 1):.2f}, "
+        f"pass^{samples} = {pass_hat_k(samples, passed, samples):.2f})"
+    )
 
 
 @pytest.fixture(scope="module", params=golden_cases(), ids=lambda case: case.id)
