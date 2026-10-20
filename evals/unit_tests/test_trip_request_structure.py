@@ -17,6 +17,7 @@ from app.core.model_client import ModelClient
 from app.evals.dataset import EvalCase
 from app.evals.pass_metrics import pass_at_k, pass_hat_k
 from evals.golden import golden_cases
+from evals.unit_tests.parallel import run_in_parallel
 from evals.unit_tests.tracing import unit_test_trace
 
 
@@ -54,4 +55,6 @@ def case(request: pytest.FixtureRequest) -> EvalCase:
 def replies(case: EvalCase, runs: int) -> list[str]:
     with unit_test_trace(__name__):
         agent = build_input_interpreter_agent(ModelClient(), today=date.today())
-        return [agent.run([user_message(case.messages[0])]).text for _ in range(runs)]
+        return run_in_parallel(
+            runs, lambda: agent.run([user_message(case.messages[0])]).text
+        )
