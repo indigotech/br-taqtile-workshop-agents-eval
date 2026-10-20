@@ -98,21 +98,17 @@ def test_final_answer_respects_the_user_preferences(
 ) -> None:
     failures = 0
     for record in case_runs:
-        prompt = JUDGE_REQUEST.format(
-            preferences="; ".join(record.case.user_preferences),
-            answer=final_answer(record),
-        )
         verdict = JudgeVerdict.model_validate_json(
-            judge.run([user_message(prompt)]).text
+            judge.run([user_message(judge_request(record))]).text
         )
-        if verdict.score < MIN_JUDGE_SCORE:
+        if verdict.score() < MIN_JUDGE_SCORE:
             failures = failures + 1
 
     assert_every_run_passes(failures, case_runs, "preferências ignoradas")
 
 
-# Atividade: escreva uma checagem nova com um campo do caso que nenhum teste
-# acima usa, ou troque a rubrica do juiz por uma com faixas de nota.
+# Atividade: escreva uma checagem que pega a reserva duplicada (o mesmo quarto
+# reservado em dois turnos da mesma execução).
 
 
 def assert_every_run_passes(
@@ -146,21 +142,60 @@ def cosine_similarity(first: list[float], second: list[float]) -> float:
     return dot_product / (first_norm * second_norm)
 
 
-class JudgeVerdict(BaseModel):
+def judge_request(record: RunRecord) -> str:
+    reservations = [
+        f"- {reservation.accommodation_name} ({reservation.accommodation_kind}), "
+        f"{reservation.city_name}, R$ {reservation.total_price:.2f}"
+        for turn in record.turns
+        for reservation in turn.reservations_created
+    ]
+    return JUDGE_REQUEST.format(
+        messages="\n".join(f"- {message}" for message in record.case.messages),
+        preferences="\n".join(f"- {item}" for item in record.case.user_preferences),
+        reservations="\n".join(reservations) or "nenhuma",
+        answer=final_answer(record),
+    )
+
+
+class PreferenceVerdict(BaseModel):
+    preference: str
+    applies: bool
     score: float
     reason: str
 
 
+class JudgeVerdict(BaseModel):
+    preferences: list[PreferenceVerdict]
+
+    def score(self) -> float:
+        """Mean over the preferences the answer should already address; when the
+        planner is still asking questions, none applies and nothing counts against it."""
+        scores = [item.score for item in self.preferences if item.applies]
+        return sum(scores) / len(scores) if scores else 1.0
+
+
 JUDGE_PROMPT = """\
-Você avalia respostas de um planejador de viagens. Dê uma nota de 0 a 1:
-1 quando a resposta respeita todas as preferências do usuário, 0 quando ignora
-todas, e valores no meio quando respeita só parte delas. Uma preferência que a
-resposta não tem como atender (por exemplo, nada foi planejado ainda) não conta
-contra ela. Responda com a nota e o motivo em uma frase.
+Você avalia respostas de um planejador de viagens. Para cada preferência do
+usuário, devolva:
+- applies: true se a resposta já deveria atender essa preferência. Se o
+  planejador ainda está coletando informações (por exemplo, pergunta o orçamento
+  antes de planejar), nenhuma preferência se aplica.
+- score: 1 se a resposta respeita a preferência, 0,5 se respeita só em parte, 0
+  se ignora ou contraria.
+- reason: o motivo em uma frase.
+Use as reservas listadas para saber o tipo de cada hospedagem: o tipo cadastrado
+vale mais do que o nome (uma pousada cadastrada como hotel conta como hotel).
 """
 
 JUDGE_REQUEST = """\
-Preferências do usuário: {preferences}
+Mensagens do usuário:
+{messages}
+
+Preferências do usuário (do pedido e do perfil):
+{preferences}
+
+Reservas feitas pelo planejador:
+{reservations}
 
 Resposta do planejador:
 {answer}
