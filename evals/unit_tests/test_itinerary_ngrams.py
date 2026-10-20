@@ -44,6 +44,10 @@ def test_itinerary_covers_the_reference_bigrams(
 
 # Atividade 1: troque bigramas por trigramas (três palavras seguidas) e compare
 # as notas.
+def test_itinerary_covers_the_reference_trigrams(
+    case: EvalCase, itineraries: list[str]
+) -> None:
+    pytest.skip("atividade: escreva este teste")
 
 
 # Atividade 2: reescreva inteira a resposta de referência de um caso no

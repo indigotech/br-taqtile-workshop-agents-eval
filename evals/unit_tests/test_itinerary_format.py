@@ -41,10 +41,16 @@ def test_itinerary_has_no_iso_dates(itineraries: list[str]) -> None:
 
 
 # Atividade 1: o roteiro não tem nenhum emoji (a regex não pode casar).
+def test_itinerary_has_no_emoji(itineraries: list[str]) -> None:
+    pytest.skip("atividade: escreva este teste")
 
 
 # Atividade 2: quando o resumo do caso (case.itinerary_brief) traz uma reserva
 # confirmada, o roteiro cita o número dela (a regex tem que casar).
+def test_itinerary_cites_the_reservation_number(
+    case: EvalCase, itineraries: list[str]
+) -> None:
+    pytest.skip("atividade: escreva este teste")
 
 
 @pytest.fixture(

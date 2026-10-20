@@ -47,12 +47,16 @@ def test_itinerary_means_the_same_as_the_reference(
     )
 
 
-# Atividade 1: gere o embedding de uma frase com model_client.embed e olhe o
-# vetor: quantos números ele tem?
+# Atividade 1: chame model_client.embed(["Pousada no Centro Histórico"]) e olhe
+# o resultado. Rode só as atividades com ARGS="-s -k embedding".
+def test_embedding_of_one_sentence(model_client: ModelClient) -> None:
+    pytest.skip("atividade: escreva este teste")
 
 
 # Atividade 2: compare "A viagem cabe no orçamento." com "A viagem não cabe no
 # orçamento." Quanto dá a similaridade?
+def test_embedding_of_opposite_sentences(model_client: ModelClient) -> None:
+    pytest.skip("atividade: escreva este teste")
 
 
 def cosine_similarity(first: list[float], second: list[float]) -> float:

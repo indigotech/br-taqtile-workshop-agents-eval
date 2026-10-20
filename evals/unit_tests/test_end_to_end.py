@@ -109,6 +109,8 @@ def test_final_answer_respects_the_user_preferences(
 
 # Atividade: escreva uma checagem que pega a reserva duplicada (o mesmo quarto
 # reservado em dois turnos da mesma execução).
+def test_no_room_is_booked_twice(case_runs: list[RunRecord]) -> None:
+    pytest.skip("atividade: escreva este teste")
 
 
 def assert_every_run_passes(
