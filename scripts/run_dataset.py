@@ -1,5 +1,5 @@
 """Run every dataset case N times against the real model API and save one
-RunRecord per run to evals/runs/<timestamp>/results.jsonl. Each run makes a
+RunRecord per run to evals/runs/<timestamp>/results.json. Each run makes a
 dozen or more model calls, so mind the quota: narrow with --cases while
 iterating."""
 
@@ -15,7 +15,7 @@ from app.core.observability import flush, get_langfuse
 from app.core.terminal import Style, paint
 from app.data.http import build_http_client
 from app.evals.dataset import load_dataset
-from app.evals.records import RunRecord
+from app.evals.records import RunRecord, save_run_records
 from app.evals.runner import run_case
 
 logger = logging.getLogger(__name__)
@@ -37,21 +37,19 @@ def main() -> None:
 
     output_directory = _RUNS_DIRECTORY / datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
     output_directory.mkdir(parents=True)
-    results_path = output_directory / "results.jsonl"
+    results_path = output_directory / "results.json"
     model_client = ModelClient()
+    records: list[RunRecord] = []
     try:
-        with (
-            build_http_client() as http_client,
-            results_path.open("w", encoding="utf-8") as results,
-        ):
+        with build_http_client() as http_client:
             for case in cases:
                 for run_index in range(1, arguments.runs + 1):
                     logger.info(
                         "Running %s (%s/%s)", case.id, run_index, arguments.runs
                     )
                     record = run_case(case, run_index, model_client, http_client, today)
-                    results.write(record.model_dump_json() + "\n")
-                    results.flush()
+                    records.append(record)
+                    save_run_records(results_path, records)
                     _print_summary(record)
     finally:
         flush()

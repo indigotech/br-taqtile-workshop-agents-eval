@@ -81,7 +81,7 @@ A cada resposta, o chat imprime o link do trace. Com alguma das chaves vazia, o 
 | `make reset-db` | Recria o banco `data/planner.db` com os dados de exemplo |
 | `make test` | Roda os testes (sem chamar a API do Modelo) |
 | `make test-model RUNS=3` | Roda os testes de `evals/unit_tests/` chamando o Modelo de verdade (gasta tokens) |
-| `make eval-end-to-end` | Confere o `results.jsonl` mais recente do `make run-dataset` contra o golden dataset (`RESULTS=…` escolhe outro) |
+| `make eval-end-to-end` | Confere o `results.json` mais recente do `make run-dataset` contra o golden dataset (`RESULTS=…` escolhe outro) |
 | `make install-judge` | Instala o promptfoo (precisa de Node 22.22+) |
 | `make eval-judge ARGS="--repeat 3"` | Roda o eval de LLM como juiz do promptfoo (gasta tokens); `CONFIG=evals/judge/judge_consistency.yaml` roda o de consistência do juiz |
 | `make view-judge` | Abre os resultados do promptfoo no navegador |
@@ -90,7 +90,7 @@ A cada resposta, o chat imprime o link do trace. Com alguma das chaves vazia, o 
 
 ## Avaliando o sistema
 
-`make run-dataset RUNS=3` roda cada caso de `evals/dataset.json` 3 vezes e salva as saídas em `evals/runs/<data-hora>/results.jsonl`, um `RunRecord` por linha. O `make eval-end-to-end` confere esses registros contra o esperado de cada caso.
+`make run-dataset RUNS=3` roda cada caso de `evals/dataset.json` 3 vezes e salva as saídas em `evals/runs/<data-hora>/results.json`, um array com um `RunRecord` por execução, formatado como o dataset. O `make eval-end-to-end` confere esses registros contra o esperado de cada caso.
 
 Cada execução faz uma dúzia ou mais de chamadas ao Modelo. Enquanto estiver ajustando, use `CASES=id1,id2` pra rodar só alguns casos e não gastar a cota gratuita.
 

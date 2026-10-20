@@ -1,6 +1,6 @@
-"""Base da avaliação de ponta a ponta: lê o results.jsonl de um make run-dataset
+"""Base da avaliação de ponta a ponta: lê o results.json de um make run-dataset
 e confere cada execução contra o esperado do seu caso no golden dataset. Pega o
-mais recente em evals/runs/; RESULTS=evals/runs/<data-hora>/results.jsonl
+mais recente em evals/runs/; RESULTS=evals/runs/<data-hora>/results.json
 escolhe outro. As checagens exatas não chamam o modelo; a similaridade e o juiz, sim."""
 
 import math
@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from app.core.agent import Agent, user_message
 from app.core.model_client import ModelClient
 from app.evals.pass_metrics import pass_at_k, pass_hat_k
-from app.evals.records import RunRecord
+from app.evals.records import RunRecord, load_run_records
 
 RUNS_DIRECTORY = Path(__file__).parents[1] / "runs"
 MIN_SIMILARITY = 0.70
@@ -202,26 +202,18 @@ Resposta do planejador:
 """
 
 
-def load_run_records() -> list[RunRecord]:
+def records_to_check() -> list[RunRecord]:
     chosen = os.environ.get("RESULTS")
     if chosen:
-        results_path = Path(chosen)
-    else:
-        latest = sorted(RUNS_DIRECTORY.glob("*/results.jsonl"))
-        if not latest:
-            return []
-        results_path = latest[-1]
-    return [
-        RunRecord.model_validate_json(line)
-        for line in results_path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
+        return load_run_records(Path(chosen))
+    latest = sorted(RUNS_DIRECTORY.glob("*/results.json"))
+    return load_run_records(latest[-1]) if latest else []
 
 
-RUN_RECORDS = load_run_records()
+RUN_RECORDS = records_to_check()
 if not RUN_RECORDS:
     pytest.skip(
-        "nenhum results.jsonl em evals/runs/: rode make run-dataset antes",
+        "nenhum results.json em evals/runs/: rode make run-dataset antes",
         allow_module_level=True,
     )
 

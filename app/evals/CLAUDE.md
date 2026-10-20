@@ -16,7 +16,7 @@ Keep the cases tied to the seed: user ids and catalog cities come from `app/data
 
 `run_case` plays one case against the orchestrator on a **freshly seeded throwaway database** (runs never see each other's reservations) and returns a `RunRecord`: per turn, the response, each delegation to a specialist (`AgentCall`), reservations created, trace id, latency, and any model API error or turn over the token budget (either ends that run instead of the whole dataset). Between turns it carries the history the same way as the CLI (`next_turn_history`: the latest turn in full, earlier ones as text only). Traces are tagged `dataset` + the case id in Langfuse.
 
-`make run-dataset RUNS=3 CASES=id1,id2` runs it against the real API and writes `evals/runs/<timestamp>/results.jsonl` (git-ignored). Each run makes a dozen or more model calls — narrow with `CASES` while iterating.
+`make run-dataset RUNS=3 CASES=id1,id2` runs it against the real API and writes `evals/runs/<timestamp>/results.json` (git-ignored), an indented JSON array like the dataset, rewritten after every run (`save_run_records` / `load_run_records` in `records.py`). Each run makes a dozen or more model calls — narrow with `CASES` while iterating.
 
 ## Real-model unit tests (`evals/unit_tests/`)
 
