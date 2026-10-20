@@ -1,5 +1,6 @@
-# Base da leva 2: as respostas são fixas, escritas à mão, então só o juiz muda de
-# uma execução para outra. O provider echo devolve o prompt como resposta, sem
+# Base da leva 2: as respostas são fixas, escritas à mão para o caso
+# carla-paraty-confirma-reserva do golden dataset (evals/dataset.json), então só
+# o juiz muda de uma execução para outra. O provider echo devolve o prompt como resposta, sem
 # chamar o modelo; quem gasta tokens aqui é só o juiz.
 #
 # make eval-judge CONFIG=evals/judge/judge_consistency.yaml ARGS="--repeat 5"

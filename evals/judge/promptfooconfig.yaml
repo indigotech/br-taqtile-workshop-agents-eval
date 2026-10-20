@@ -1,5 +1,6 @@
-# Base da atividade: um LLM juiz dá nota para a resposta do agente de pesquisa
-# seguindo uma rubrica. Copie a asserção para cada nova rubrica. Os espaços das
+# Base da atividade: o agente de pesquisa responde à primeira mensagem de cada
+# caso do golden dataset (evals/dataset.json), e um LLM juiz dá nota para a
+# resposta seguindo uma rubrica. Copie a asserção para cada nova rubrica. Os espaços das
 # atividades estão marcados abaixo do teste.
 #
 # make eval-judge                     roda uma vez
@@ -7,8 +8,9 @@
 # make view-judge                     abre os resultados no navegador
 description: Agente de pesquisa avaliado por um LLM juiz
 
+# O prompt é o id do caso: o provider busca a mensagem no dataset.
 prompts:
-  - "{{pedido}}"
+  - "{{caso}}"
 
 providers:
   - id: file://research_agent_provider.py
@@ -32,9 +34,7 @@ defaultTest:
 tests:
   - description: Paraty para um casal vegetariano que adora museus
     vars:
-      pedido: >-
-        Sugira restaurantes, eventos e atrações em Paraty (RJ) para um casal no
-        próximo fim de semana. Sou vegetariana e a gente adora museus.
+      caso: carla-paraty-confirma-reserva
     assert:
       - type: llm-rubric
         value: Todos os restaurantes sugeridos servem opções vegetarianas.
@@ -49,5 +49,15 @@ tests:
       # Atividade 2: escreva uma rubrica com 5 faixas de nota na escala de 0 a 1
       # do juiz (0; 0,25; 0,5; 0,75; 1), com um exemplo do que vale cada faixa.
       # Qual threshold vira o critério de aprovação?
+
+  - description: Ubatuba para três amigos com orçamento apertado
+    vars:
+      caso: bruno-ubatuba-estoura-orcamento
+    assert:
+      - type: llm-rubric
+        value: >-
+          Todos os restaurantes sugeridos são baratos, compatíveis com R$ 600
+          para três pessoas no fim de semana inteiro.
+        threshold: 0.8
 
 # Leva 2 — dá pra confiar no juiz? Fica em judge_consistency.yaml.

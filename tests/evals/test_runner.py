@@ -29,12 +29,14 @@ def _case(messages: list[str]) -> EvalCase:
             start_date=date(2026, 10, 3),
             end_date=date(2026, 10, 4),
             guests=2,
+            budget_amount=None,
         ),
         required_agents=[],
         user_preferences=[],
         confirmation_message_index=1,
         max_lodging_total=None,
         reference_answer=None,
+        itinerary_brief=None,
     )
 
 

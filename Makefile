@@ -111,6 +111,13 @@ test-model: RUNS = 3
 test-model: ## Run evals/unit_tests against the real API, costs tokens (RUNS=3, TEST_PATH, ARGS="-s -k ...")
 	@RUNS=$(RUNS) uv run pytest $(TEST_PATH) $(PYTEST_FLAGS) $(ARGS)
 
+# results.jsonl that eval-end-to-end checks; empty picks the latest in evals/runs/
+RESULTS ?=
+
+.PHONY: eval-end-to-end
+eval-end-to-end: ## Check a make run-dataset results.jsonl against the golden dataset (RESULTS=evals/runs/x/results.jsonl, default the latest)
+	@RESULTS=$(RESULTS) uv run pytest evals/unit_tests/test_end_to_end.py $(PYTEST_FLAGS) $(ARGS)
+
 .PHONY: lint-check
 lint-check: ## Run ruff check + ruff format check + mypy --strict
 	@echo "Starting ruff check:"

@@ -29,34 +29,41 @@ class TestDatePlaceholders:
 
 class TestLoadDataset:
     def test_placeholders_are_resolved_before_validation(self, tmp_path: Path) -> None:
-        dataset_path = tmp_path / "dataset.jsonl"
+        dataset_path = tmp_path / "dataset.json"
         dataset_path.write_text(
-            '{"id": "c1", "description": "d", "user_id": 1,'
+            '[{"id": "c1", "description": "d", "user_id": 1,'
             ' "messages": ["Paraty dia {next_saturday_br}"],'
             ' "expected_trip": {"destination": "Paraty",'
-            ' "start_date": "{next_saturday}", "end_date": "{next_sunday}", "guests": 2},'
+            ' "start_date": "{next_saturday}", "end_date": "{next_sunday}", "guests": 2,'
+            ' "budget_amount": null},'
             ' "required_agents": [], "user_preferences": [],'
             ' "confirmation_message_index": null, "max_lodging_total": null,'
-            ' "reference_answer": null}\n\n',
+            ' "reference_answer": null, "itinerary_brief": "Paraty, {next_sunday_br}"}]\n',
             encoding="utf-8",
         )
 
         [case] = load_dataset(dataset_path, today=date(2026, 9, 24))
 
-        assert (case.messages, case.expected_trip.model_dump()) == (
+        assert (
+            case.messages,
+            case.expected_trip.model_dump(),
+            case.itinerary_brief,
+        ) == (
             ["Paraty dia 26/09"],
             {
                 "destination": "Paraty",
                 "start_date": date(2026, 9, 26),
                 "end_date": date(2026, 9, 27),
                 "guests": 2,
+                "budget_amount": None,
             },
+            "Paraty, 27/09",
         )
 
     def test_committed_dataset_is_valid(self) -> None:
-        cases = load_dataset(Path("evals/dataset.jsonl"), today=date(2026, 9, 24))
+        cases = load_dataset(Path("evals/dataset.json"), today=date(2026, 9, 24))
 
-        assert len({case.id for case in cases}) == len(cases) == 2
+        assert len({case.id for case in cases}) == len(cases) == 3
         for case in cases:
             assert case.confirmation_message_index is None or (
                 case.confirmation_message_index < len(case.messages)

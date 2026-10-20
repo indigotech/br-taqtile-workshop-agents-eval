@@ -20,7 +20,7 @@ from app.evals.runner import run_case
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_DATASET = Path("evals/dataset.jsonl")
+_DEFAULT_DATASET = Path("evals/dataset.json")
 _RUNS_DIRECTORY = Path("evals/runs")
 
 

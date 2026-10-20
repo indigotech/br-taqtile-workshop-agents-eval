@@ -77,10 +77,11 @@ A cada resposta, o chat imprime o link do trace. Com alguma das chaves vazia, o 
 | `make run-case-tool-error` | Chat com uma tool falhando em toda chamada (`ERROR_TOOL=search_accommodations`), pra ver um span de erro no Langfuse |
 | `make run-case-slow-tool` | Chat com uma tool demorando 5s a mais em toda chamada (`SLOW_TOOL=search_accommodations`), pra ela aparecer como a mais lenta na timeline |
 | `make smoke-test` | Roda uma conversa real de ponta a ponta num banco descartável |
-| `make run-dataset RUNS=3 CASES=id1,id2` | Roda os casos de `evals/dataset.jsonl` N vezes e salva as saídas em `evals/runs/` |
+| `make run-dataset RUNS=3 CASES=id1,id2` | Roda os casos de `evals/dataset.json` N vezes e salva as saídas em `evals/runs/` |
 | `make reset-db` | Recria o banco `data/planner.db` com os dados de exemplo |
 | `make test` | Roda os testes (sem chamar a API do Modelo) |
 | `make test-model RUNS=3` | Roda os testes de `evals/unit_tests/` chamando o Modelo de verdade (gasta tokens) |
+| `make eval-end-to-end` | Confere o `results.jsonl` mais recente do `make run-dataset` contra o golden dataset (`RESULTS=…` escolhe outro) |
 | `make install-judge` | Instala o promptfoo (precisa de Node 22.22+) |
 | `make eval-judge ARGS="--repeat 3"` | Roda o eval de LLM como juiz do promptfoo (gasta tokens); `CONFIG=evals/judge/judge_consistency.yaml` roda o de consistência do juiz |
 | `make view-judge` | Abre os resultados do promptfoo no navegador |
@@ -89,7 +90,7 @@ A cada resposta, o chat imprime o link do trace. Com alguma das chaves vazia, o 
 
 ## Avaliando o sistema
 
-`make run-dataset RUNS=3` roda cada caso de `evals/dataset.jsonl` 3 vezes e salva as saídas em `evals/runs/<data-hora>/results.jsonl`, um `RunRecord` por linha. Os evaluators são construídos durante o workshop em cima desses registros.
+`make run-dataset RUNS=3` roda cada caso de `evals/dataset.json` 3 vezes e salva as saídas em `evals/runs/<data-hora>/results.jsonl`, um `RunRecord` por linha. O `make eval-end-to-end` confere esses registros contra o esperado de cada caso.
 
 Cada execução faz uma dúzia ou mais de chamadas ao Modelo. Enquanto estiver ajustando, use `CASES=id1,id2` pra rodar só alguns casos e não gastar a cota gratuita.
 

@@ -1,8 +1,7 @@
-import json
 from datetime import date, timedelta
 from pathlib import Path
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, TypeAdapter
 
 
 class ExpectedTrip(BaseModel):
@@ -10,6 +9,7 @@ class ExpectedTrip(BaseModel):
     start_date: date | None
     end_date: date | None
     guests: int | None
+    budget_amount: float | None
 
 
 class EvalCase(BaseModel):
@@ -33,24 +33,25 @@ class EvalCase(BaseModel):
     reference_answer: str | None = Field(
         description="A good final answer, for similarity-based comparison"
     )
+    itinerary_brief: str | None = Field(
+        description="The facts the orchestrator hands the output generator for this trip, so the generator can be tested alone"
+    )
+
+
+_CASES = TypeAdapter(list[EvalCase])
 
 
 def load_dataset(path: Path, today: date) -> list[EvalCase]:
-    """Read the JSONL dataset, resolving date placeholders against `today`.
+    """Read the JSON array of cases, resolving date placeholders against `today`.
 
     Dates are placeholders (`{next_saturday}`, `{next_saturday_br}`, ...) rather
     than literals because the weather forecast only covers the next ~16 days: a
     case with fixed dates would stop exercising the weather agent a few weeks
     after it was written."""
-    placeholders = date_placeholders(today)
-    cases: list[EvalCase] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        for name, value in placeholders.items():
-            line = line.replace("{" + name + "}", value)
-        cases.append(EvalCase.model_validate(json.loads(line)))
-    return cases
+    text = path.read_text(encoding="utf-8")
+    for name, value in date_placeholders(today).items():
+        text = text.replace("{" + name + "}", value)
+    return _CASES.validate_json(text)
 
 
 def date_placeholders(today: date) -> dict[str, str]:

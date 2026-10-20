@@ -1,4 +1,5 @@
-"""Base da atividade: copie o teste para cada nova regra, trocando o padrão e
+"""Base da atividade: o gerador escreve o roteiro de cada caso do golden dataset
+(evals/dataset.json). Copie o teste para cada nova regra, trocando o padrão e
 se ele deve ou não aparecer no roteiro. Os espaços das duas atividades estão
 marcados abaixo do teste."""
 
@@ -9,25 +10,18 @@ import pytest
 from app.agents.output_generator_agent import build_output_generator_agent
 from app.core.agent import user_message
 from app.core.model_client import ModelClient
+from app.evals.dataset import EvalCase
 from app.evals.pass_metrics import pass_at_k, pass_hat_k
+from evals.golden import golden_cases
 from evals.unit_tests.tracing import unit_test_trace
-
-INSTRUCTIONS = """\
-Escreva o roteiro final da viagem.
-Destino: Paraty (RJ). Datas: sábado 10/10/2026 a domingo 11/10/2026. 2 pessoas.
-Hospedagem: Pousada do Porto (hotel), Centro Histórico. Reserva nº 5 confirmada,
-total de R$ 450,00 (1 noite).
-Clima: sábado 24 °C, 10% de chuva; domingo 22 °C, 60% de chuva.
-Restaurantes sugeridos: Banana da Terra, Thai Brasil. Atividade: passeio de escuna.
-Orçamento informado pelo usuário: R$ 2.000,00. Gastos estimados: hospedagem
-R$ 450,00, alimentação R$ 600,00, atividades R$ 300,00; total R$ 1.350,00.
-"""
 
 ISO_DATE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
 # EMOJI = re.compile("[\U0001F300-\U0001FAFF\U00002600-\U000027BF]")
-# RESERVATION_NUMBER = re.compile(
-#     r"reserva\D{0,60}(?:n\.?[º°]|número|#)\W{0,3}5\b", re.IGNORECASE
-# )
+# RESERVATION_IN_BRIEF = re.compile(r"Reserva nº (\d+) confirmada")
+# def reservation_number(number: str) -> re.Pattern[str]:
+#     return re.compile(
+#         rf"reserva\D{{0,60}}(?:n\.?[º°]|número|#)\W{{0,3}}{number}\b", re.IGNORECASE
+#     )
 
 
 def test_itinerary_has_no_iso_dates(itineraries: list[str]) -> None:
@@ -48,11 +42,25 @@ def test_itinerary_has_no_iso_dates(itineraries: list[str]) -> None:
 # Atividade 1: o roteiro não tem nenhum emoji (a regex não pode casar).
 
 
-# Atividade 2: o roteiro cita o número da reserva (a regex tem que casar).
+# Atividade 2: quando o resumo do caso (case.itinerary_brief) traz uma reserva
+# confirmada, o roteiro cita o número dela (a regex tem que casar).
+
+
+@pytest.fixture(
+    scope="module",
+    params=[case for case in golden_cases() if case.itinerary_brief],
+    ids=lambda case: case.id,
+)
+def case(request: pytest.FixtureRequest) -> EvalCase:
+    golden_case: EvalCase = request.param
+    return golden_case
 
 
 @pytest.fixture(scope="module")
-def itineraries(runs: int) -> list[str]:
+def itineraries(case: EvalCase, runs: int) -> list[str]:
     with unit_test_trace(__name__):
         agent = build_output_generator_agent(ModelClient())
-        return [agent.run([user_message(INSTRUCTIONS)]).text for _ in range(runs)]
+        return [
+            agent.run([user_message(case.itinerary_brief or "")]).text
+            for _ in range(runs)
+        ]
