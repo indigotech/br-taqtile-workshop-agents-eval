@@ -23,7 +23,10 @@ MIN_BIGRAM_RECALL = 0.3
 def test_itinerary_covers_the_reference_bigrams(
     case: EvalCase, itineraries: list[str]
 ) -> None:
-    reference_bigrams = bigrams(case.reference_answer or "")
+    reference = case.reference_answer
+    assert reference is not None, "este teste só roda em casos com reference_answer"
+
+    reference_bigrams = bigrams(reference)
     failures = 0
     for itinerary in itineraries:
         shared = reference_bigrams & bigrams(itinerary)

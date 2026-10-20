@@ -22,9 +22,17 @@ MIN_SIMILARITY = 0.70
 def test_itinerary_means_the_same_as_the_reference(
     case: EvalCase, itineraries: list[str], model_client: ModelClient
 ) -> None:
-    reference_vector, *itinerary_vectors = model_client.embed(
-        [case.reference_answer or "", *itineraries]
-    )
+    reference = case.reference_answer
+    assert reference is not None, "este teste só roda em casos com reference_answer"
+
+    texts = [reference]
+    texts.extend(itineraries)
+    # Uma chamada só para todos os textos. Os vetores voltam na mesma ordem em
+    # que os textos foram enviados: primeiro a referência, depois os roteiros.
+    vectors = model_client.embed(texts)
+    reference_vector = vectors[0]
+    itinerary_vectors = vectors[1:]
+
     failures = 0
     for itinerary_vector in itinerary_vectors:
         if cosine_similarity(reference_vector, itinerary_vector) < MIN_SIMILARITY:
