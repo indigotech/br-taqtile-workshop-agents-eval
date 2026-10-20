@@ -16,5 +16,4 @@ def build_output_generator_agent(model_client: ModelClient) -> Agent:
         name="output_generator_agent",
         system_prompt=_SYSTEM_PROMPT,
         model_client=model_client,
-        temperature=2.0,
     )
